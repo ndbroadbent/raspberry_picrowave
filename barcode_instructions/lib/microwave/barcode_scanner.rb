@@ -1,10 +1,14 @@
 require 'libdevinput'
+DevInput.class_eval { attr_reader :dev }
+EVIOCGRAB = 1074021776
 require 'barby/barcode/ean_13'
 
 class Microwave
   class BarcodeScanner
     def initialize
       @barcode_scanner = DevInput.new(BARCODE_SCANNER_EVENT)
+      # Grab barcode scanner exclusively (so keypress events aren't heard by Linux)
+      @barcode_scanner.dev.ioctl(EVIOCGRAB, 1)
     end
 
     def valid_barcode?(barcode)
