@@ -1,0 +1,32 @@
+microwave
+start
+stop
+one second on high
+two seconds on medium
+three seconds on low
+five seconds on defrost
+ten seconds
+fifteen seconds
+twenty seconds
+twenty five seconds
+thirty seconds
+thirty five seconds
+forty five seconds
+one minute on high
+one minute and fifteen seconds on high
+one minute and twenty seconds
+one minute and thirty seconds
+one minute and forty five seconds
+two minutes
+two minutes and fifteen seconds
+two minutes and thirty seconds
+two minutes and forty five seconds
+three minutes
+three minutes and thirty seconds
+four minutes on high
+five minutes on medium
+six minutes on low
+seven minutes on defrost
+eight minutes
+nine minutes
+ten minutes

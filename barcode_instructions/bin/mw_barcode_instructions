@@ -1,0 +1,3 @@
+#!/bin/bash
+cd /home/ndbroadbent/raspberry_picrowave/barcode_instructions
+./barcode_instructions.rb

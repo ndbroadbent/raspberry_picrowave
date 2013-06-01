@@ -1,0 +1,44 @@
+#! /bin/sh
+# /etc/init.d/mw_daemon
+
+### BEGIN INIT INFO
+# Provides:          mw_daemon
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Microwave Arduino Daemon
+# Description:       Manage Microwave Arduino Daemon process
+### END INIT INFO
+
+# Find PID of current process
+PID=$(ps aux | grep '[r]uby \./daemon\.rb' | awk '{print $2}' | head -n1)
+
+case "$1" in
+  start)
+    if [ -n "$PID" ]; then
+      echo "mw_daemon is already running."
+    else
+      echo "Starting mw_daemon..."
+      mw_daemon &
+    fi
+    ;;
+  stop)
+    if [ -n "$PID" ]; then
+      echo "Stopping mw_daemon..."
+      kill $PID
+    else
+      echo "mw_daemon is not running."
+    fi
+    ;;
+  restart)
+    $0 stop
+    $0 start
+    ;;
+  *)
+    echo "Usage: /etc/init.d/mw_daemon {start|stop|restart}"
+    exit 1
+    ;;
+esac
+
+exit 0

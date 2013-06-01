@@ -1,0 +1,44 @@
+#! /bin/sh
+# /etc/init.d/mw_barcode_instructions
+
+### BEGIN INIT INFO
+# Provides:          mw_barcode_instructions
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Microwave Barcode Instructions
+# Description:       Manage Microwave Barcode Instructions process
+### END INIT INFO
+
+# Find PID of current process
+PID=$(ps aux | grep '[r]uby \./barcode_instructions\.rb' | awk '{print $2}' | head -n1)
+
+case "$1" in
+  start)
+    if [ -n "$PID" ]; then
+      echo "mw_barcode_instructions is already running."
+    else
+      echo "Starting mw_barcode_instructions..."
+      mw_barcode_instructions &
+    fi
+    ;;
+  stop)
+    if [ -n "$PID" ]; then
+      echo "Stopping mw_barcode_instructions..."
+      kill $PID
+    else
+      echo "mw_barcode_instructions is not running."
+    fi
+    ;;
+  restart)
+    $0 stop
+    $0 start
+    ;;
+  *)
+    echo "Usage: /etc/init.d/mw_barcode_instructions {start|stop|restart}"
+    exit 1
+    ;;
+esac
+
+exit 0

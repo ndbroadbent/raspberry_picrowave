@@ -1,0 +1,45 @@
+#! /bin/sh
+# /etc/init.d/mw_voice_control
+
+### BEGIN INIT INFO
+# Provides:          mw_voice_control
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Microwave Voice Control
+# Description:       Manage Microwave Voice Control process
+### END INIT INFO
+
+# Find PID of current process
+PID=$(ps aux | grep '[p]ocketsphinx_continuous' | awk '{print $2}' | head -n1)
+
+case "$1" in
+  start)
+    if [ -n "$PID" ]; then
+      echo "mw_voice_control is already running."
+    else
+      echo "Starting mw_voice_control..."
+      mw_voice_control &
+    fi
+    ;;
+  stop)
+    if [ -n "$PID" ]; then
+      echo "Stopping mw_voice_control..."
+      # Doesn't seem to respond to SIGTERM
+      kill -9 $PID
+    else
+      echo "pocketsphinx_continuous is not running."
+    fi
+    ;;
+  restart)
+    $0 stop
+    $0 start
+    ;;
+  *)
+    echo "Usage: /etc/init.d/mw_voice_control {start|stop|restart}"
+    exit 1
+    ;;
+esac
+
+exit 0
