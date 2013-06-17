@@ -5,68 +5,45 @@
 require 'rubygems'
 require 'socket'
 require 'thread'
-require 'serialport'
+require 'json'
+require File.expand_path('../lib/ext/microwave', __FILE__)
 
 PORT = 3141
-ARDUINO = "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AH01GMF6-if00-port0"
 
-def initialize_serial_connection
-  @microwave = SerialPort.new(ARDUINO, 9600, 8, 1, SerialPort::NONE)
-  @microwave.read_timeout = 0
-end
-
-initialize_serial_connection
+@microwave = MicrowaveExt.new
 @server    = TCPServer.new(PORT)
 
-at_exit do
-  @microwave.close
+Thread.start(@microwave) do |m|
+  m.touchpad_loop
 end
 
 loop do
   Thread.start(@server.accept) do |client|
     begin
-
       puts "Client connected."
 
-      while request = client.gets
-        action, command = request.chomp.split(": ")
+      while data = client.gets
+        request = JSON.parse(data)
 
-        case action
-        when 'info'
-          # Send info request
-          @microwave.puts "i"
-          # Receive info
-          info = @microwave.gets.chomp
-          client.puts info
+        if request['get_info']
+          # Fetch info and send to TCP client
+          client.puts(@microwave.get_info)
 
-        when 'serial'
-          puts "Sending command to Arduino: #{command}"
-          # Just relay command to serial
-          @microwave.puts command
+        elsif command = request['command']
+          puts "Sending command to Microwave: #{command}"
+          @microwave.send_command(command)
         end
       end
 
       client.close
       puts "Connection closed."
+
     rescue Exception => ex
-      puts "Error from arduino serial connection!"
+      puts "Error from microwave daemon!"
       puts ex.inspect
 
       # Close TCP connection
       client.close
-
-      # Repair serial connection
-      connected = false
-      while !connected
-        begin
-          initialize_serial_connection
-          connected = true
-        rescue
-          sleep 1
-        end
-      end
-
-      puts "Reconnected!"
     end
   end
 end
