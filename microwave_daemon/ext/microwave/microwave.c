@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#define DEBUG false
+#define DEBUG true
 #define SERIAL_TIMEOUT 1000
 #define VOICE_COMMAND_TIMEOUT 10000   // Allow voice commands up to 10 seconds after the door closes
 
@@ -12,9 +12,9 @@
 #define scanLatchPin 1
 #define scanClockPin 2
 
-#define inputDataPin  3
+#define inputClockPin 3
 #define inputLatchPin 4
-#define inputClockPin 5
+#define inputDataPin  5
 
 #define outputDataPin  6
 #define outputLatchPin 7
@@ -123,6 +123,14 @@ char serCommand, serParams;
 
 unsigned long serialTimer, buttonTimer, countdownTimer, doorTimer;
 
+
+void printBinary(uint8_t var) {
+  uint8_t mask;
+  for (mask = 0x80; mask; mask >>= 1) {  // B10000000
+      printf(mask & var ? "1" : "0");
+  }
+  printf("\n");
+}
 
 // Check voice commands
 bool voiceCommandAllowed() {
@@ -316,19 +324,48 @@ void quickStart(int seconds, int power) {
   start();
 }
 
+uint8_t shiftIn2(int dataPin, int clockPin, int latchPin) {
+  int i;
+  int tmp = 0;
+  uint8_t dataIn = 0;
+
+  digitalWrite(latchPin, HIGH);
+  delayMicroseconds(30);
+  digitalWrite(latchPin, LOW);
+
+  for (i = 7; i >= 0; i--) {
+    digitalWrite(clockPin, LOW);
+    delayMicroseconds(5);
+    tmp = digitalRead(dataPin);
+    if (tmp) {
+      dataIn = dataIn | (1 << i);
+    }
+    digitalWrite(clockPin, HIGH);
+  }
+
+  return dataIn;
+}
+
+
 
 static VALUE method_send_command(VALUE self, VALUE args) {
   VALUE command, param;
+  char * cmdStr;
+  char * paramStr = "";
+  int i;
 
   long len = RARRAY_LEN(args);
 
-  if (len > 2 || len == 0) {
-      rb_raise(rb_eArgError, "wrong number of arguments");
+  if (len > 3 || len == 0) {
+    rb_raise(rb_eArgError, "wrong number of arguments");
   }
 
   command = rb_ary_entry(args, 0);
+  cmdStr = StringValueCStr(command);
 
-  if (len >= 2) { param = rb_ary_entry(args, 1); }
+  if (len >= 2) {
+    param = rb_ary_entry(args, 1);
+  }
 
   // Voice - indicates that the command came from latent speech recognition (no keyword prefix).
   // The command will only be executed if the microwave door was recently closed.
@@ -338,85 +375,60 @@ static VALUE method_send_command(VALUE self, VALUE args) {
     commandFromVoice = Qfalse;
   }
 
-  /* Command API
-   *
-   * To start microwave for 2 minutes on high, send the following commands: plht120;s
-   * (power level high, time 120s, start)
-   *
-   */
-  switch (command) {
-    // Button  |  bc  => Push Cancel button
-    case 'b':
-      switch (StringValue(param)) {
-        case '0': pushButton(btn0); break;
-        case '1': pushButton(btn1); break;
-        case '2': pushButton(btn2); break;
-        case '3': pushButton(btn3); break;
-        case '4': pushButton(btn4); break;
-        case '5': pushButton(btn5); break;
-        case '6': pushButton(btn6); break;
-        case '7': pushButton(btn7); break;
-        case '8': pushButton(btn8); break;
-        case '9': pushButton(btn9); break;
-        case 'w': pushButton(btnWeightDefrost); break;
-        case 'j': pushButton(btnJetDefrost); break;
-        case 'r': pushButton(btnPreset); break;
-        case 't': pushButton(btnTime); break;
-        case 'e': pushButton(btnExpress); break;
-        case 'c': pushButton(btnCancel); break;
-        case 'p': pushButton(btnPower); break;
-        case 'm': pushButton(btnMemory); break;
-        case 'l': pushButton(btnClock); break;
-        case 's': pushButton(btnStart); break;
-      }
-      break;
+  if (strcmp(cmdStr, "button") == 0) {
+    if (TYPE(param) == T_STRING) {
+      paramStr = StringValueCStr(param);
 
-    // Clock  |  c1135  => Set clock to 11:35
-    case 'c':
-      setClock(NUM2INT(param));
-      break;
-
-    // Time  |  t90;  => Set time to 90 seconds
-    case 't':
-      if (voiceCommandAllowed()) {
-        setTime(NUM2INT(param));
-      }
-      break;
-
-    // Power (integer or level)
-    // Integer: p6; => Set power to 6
-    // Level:   ph  => Set power to high (10)
-    case 'p':
-      if (voiceCommandAllowed()) {
-        switch (StringValue(param)) {
-          case 'h': setPower(POWER_HIGH);    break;
-          case 'm': setPower(POWER_MEDIUM);  break;
-          case 'l': setPower(POWER_LOW);     break;
-          case 'd': setPower(POWER_DEFROST); break;
-          case 'o': setPower(POWER_ZERO);    break;
-          default:  setPower(NUM2INT(param)); break;
+      for (i = 0; i < sizeof(btnNames) / sizeof(btnNames[0]); i++) {
+        printf("%s\n", btnNames[i]);
+        if (strcmp(btnNames[i], paramStr) == 0) {
+          pushButton(i);
+          break;
         }
       }
-      break;
+    }
+  }
 
-    // Start
-    case 's':
-      if (voiceCommandAllowed()) {
-        start();
+  else if (strcmp(cmdStr, "clock") == 0) {
+    // clock  |  1135  => Set clock to 11:35
+    setClock(NUM2INT(param));
+  }
+
+  else if (strcmp(cmdStr, "time") == 0) {
+    if (voiceCommandAllowed()) {
+      setTime(NUM2INT(param));
+    }
+  }
+
+  else if (strcmp(cmdStr, "power") == 0) {
+    // power (integer or level name)
+    // Integer:    6     => Set power to 6
+    // Level name: high  => Set power to high (10)
+    if (voiceCommandAllowed()) {
+      if (TYPE(param) == T_STRING) {
+        paramStr = StringValueCStr(param);
+        if      (strcmp(paramStr, "high") == 0)    { setPower(POWER_HIGH); }
+        else if (strcmp(paramStr, "medium") == 0)  { setPower(POWER_MEDIUM); }
+        else if (strcmp(paramStr, "low") == 0)     { setPower(POWER_LOW); }
+        else if (strcmp(paramStr, "defrost") == 0) { setPower(POWER_DEFROST); }
+        else if (strcmp(paramStr, "off") == 0)     { setPower(POWER_ZERO); }
+
+      } else {
+        setPower(NUM2INT(param));
       }
-      break;
+    }
+  }
 
-    // Stop
-    case 'S':
-      if (voiceCommandAllowed()) {
-        stop();
-      }
-      break;
+  else if (strcmp(cmdStr, "start") == 0) {
+    if (voiceCommandAllowed()) { start(); }
+  }
 
-    // Pause
-    case 'P':
-      pause();
-      break;
+  else if (strcmp(cmdStr, "stop") == 0) {
+    if (voiceCommandAllowed()) { stop(); }
+  }
+
+  else if (strcmp(cmdStr, "pause") == 0) {
+    pause();
   }
 
   return self;
@@ -437,7 +449,7 @@ VALUE method_get_info(VALUE self) {
 
 
 VALUE method_touchpad_loop(VALUE self) {
-  for (;;) {
+  //for (;;) {
     inputByte = 0;
     //              B00000010              B01000000
     for (scanMask = 0x2; scanMask <= 0x40; scanMask <<= 1) {
@@ -445,8 +457,14 @@ VALUE method_touchpad_loop(VALUE self) {
       shiftOut(scanDataPin, scanClockPin, MSBFIRST, scanMask);
       digitalWrite(scanLatchPin, HIGH);
 
+      // printf("scanMask:\n");
+      // printBinary(scanMask);
+
       // Ignore first bit (floating)
-      inputByte = shiftIn(inputDataPin, inputClockPin, MSBFIRST) & 0x7F; // B01111111
+      inputByte = shiftIn2(inputDataPin, inputClockPin, inputLatchPin) & 0x7F; // B01111111
+
+      // printf("inputByte:\n");
+      // printBinary(inputByte);
 
       // 1 = closed, 0 = open
       if (!(inputByte & doorSwitch)) {
@@ -473,6 +491,10 @@ VALUE method_touchpad_loop(VALUE self) {
 
       if (buttonByte != 0) {
         currentButton = pressedButton(scanMask, buttonByte);
+
+        printf("Touchpad: %s\n", btnNames[currentButton]);
+
+        continue;
 
         if (currentButton != -1 && currentButton != lastButton) {
           switch (currentButton) {
@@ -523,22 +545,19 @@ VALUE method_touchpad_loop(VALUE self) {
       }
     }
 
-    delay(5);
-  }
+    //delay(5);
+  //}
+
+  return self;
 }
-
-// void printBinary(uint8_t var) {
-//   for (uint8_t mask = 0x80; mask; mask >>= 1) {  // B10000000
-//       printf(mask & var ? '1' : '0');
-//   }
-//   printf("\n");
-// }
-
 
 VALUE MicrowaveExt;
 
 // The initialization method for this module
 void Init_microwave() {
+  if (wiringPiSetup() == -1)
+    printf("wiringPi setup failed!\n");
+
   // Set pin modes
   pinMode(scanDataPin,    OUTPUT);
   pinMode(scanLatchPin,   OUTPUT);
