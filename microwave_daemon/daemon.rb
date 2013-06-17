@@ -10,12 +10,22 @@ require 'serialport'
 PORT = 3141
 ARDUINO = "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AH01GMF6-if00-port0"
 
-def initialize_serial_connection
-  @microwave = SerialPort.new(ARDUINO, 9600, 8, 1, SerialPort::NONE)
-  @microwave.read_timeout = 0
+def wait_for_serial_connection
+  connected = false
+  while !connected
+    begin
+      @microwave = SerialPort.new(ARDUINO, 9600, 8, 1, SerialPort::NONE)
+      @microwave.read_timeout = 0
+      puts "Connected to arduino."
+      connected = true
+    rescue
+      sleep 1
+    end
+  end
 end
 
-initialize_serial_connection
+wait_for_serial_connection
+
 @server    = TCPServer.new(PORT)
 
 at_exit do
@@ -56,15 +66,7 @@ loop do
       client.close
 
       # Repair serial connection
-      connected = false
-      while !connected
-        begin
-          initialize_serial_connection
-          connected = true
-        rescue
-          sleep 1
-        end
-      end
+      wait_for_serial_connection
 
       puts "Reconnected!"
     end
