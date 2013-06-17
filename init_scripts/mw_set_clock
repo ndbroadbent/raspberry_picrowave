@@ -1,0 +1,18 @@
+#! /bin/sh
+# /etc/init.d/mw_set_clock
+
+### BEGIN INIT INFO
+# Provides:          mw_set_clock
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Set Microwave Clock
+# Description:       Set Microwave Clock from system time
+### END INIT INFO
+
+# Just run the set clock program after a delay
+sleep 10
+/usr/bin/mw_set_clock
+
+exit 0
