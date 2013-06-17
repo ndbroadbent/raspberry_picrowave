@@ -24,3 +24,11 @@
       time: 160
     - stir
     - stand: 60
+
+'9300657782184':
+  brand: WeightWatchers
+  name: Butterscotch Pudding
+  steps:
+    - power: high
+      time: 60
+    - stand: 60
