@@ -269,7 +269,7 @@ void loop() {
     digitalWrite(scanLatchPin, HIGH);
 
     // Ignore first bit (floating)
-    inputByte = shiftIn(inputDataPin, inputClockPin) & B01111111;
+    inputByte = shiftIn(inputDataPin, inputClockPin, inputLatchPin) & B01111111;
 
     // 1 = closed, 0 = open
     if (!(inputByte & doorSwitch)) {
@@ -365,14 +365,14 @@ bool voiceCommandAllowed() {
   return true;
 }
 
-byte shiftIn(int dataPin, int clockPin) {
+byte shiftIn(int dataPin, int clockPin, int latchPin) {
   int i;
   int tmp = 0;
   byte dataIn = 0;
 
-  digitalWrite(inputLatchPin, HIGH);
+  digitalWrite(latchPin, HIGH);
   delayMicroseconds(20);
-  digitalWrite(inputLatchPin, LOW);
+  digitalWrite(latchPin, LOW);
 
   for (i = 7; i >= 0; i--) {
     digitalWrite(clockPin, LOW);
