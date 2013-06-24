@@ -1,4 +1,4 @@
-require File.expand_path('../../../arduino_ruby/arduino', __FILE__)
+require File.expand_path('../../../microwave_daemon/lib/client', __FILE__)
 require 'microwave/barcode_scanner'
 require 'microwave/cooking_step'
 
@@ -7,7 +7,7 @@ class Microwave
 
   def initialize(preparation_steps)
     @preparation_steps = preparation_steps
-    @arduino           = Arduino.new
+    @microwave           = Daemon::Client.new
     @barcode_scanner   = BarcodeScanner.new
     @upc_queue         = Queue.new
   end
@@ -31,18 +31,18 @@ class Microwave
       last_info = nil
 
       while true
-        @arduino.fetch_info
+        @microwave.fetch_info
 
-        if last_info != @arduino.info
-          puts @arduino.info.inspect
-          last_info = @arduino.info
+        if last_info != @microwave.info
+          puts @microwave.info.inspect
+          last_info = @microwave.info
         end
 
         sleep 0.5
       end
     rescue Exception => ex
       # Try re-initializing arduino until connection succeeds
-      @arduino = Arduino.new
+      @microwave = Arduino.new
       raise ex
     end
   end
@@ -70,9 +70,9 @@ class Microwave
       time_remaining = steps.map(&:time).inject(:+)
 
       # If barcode was scanned while door was open, wait for door to close
-      if @arduino.info[:door_open]
+      if @microwave.info[:door_open]
         puts "Waiting for microwave door to close..."
-        sleep(0.5) until !@arduino.info[:door_open]
+        sleep(0.5) until !@microwave.info[:door_open]
       end
 
       steps.each do |step|
@@ -83,9 +83,7 @@ class Microwave
           return false unless wait_for_door_cycle(step)
 
         elsif step.time > 0
-          command = "St#{time_remaining};pl#{}s"
-
-          @arduino.start(time_remaining, step.power[0,1])
+          @microwave.start(time_remaining, step.power)
           sleep 1 # Give microwave info time to refresh before checking interrupt
 
           puts "Waiting #{step.time} seconds..."
@@ -99,7 +97,7 @@ class Microwave
           if time_remaining > 0
             puts "Time remaining: #{time_remaining}"
 
-            @arduino.pause
+            @microwave.pause
           else
             wait_for_food_to_be_taken
           end
@@ -111,7 +109,7 @@ class Microwave
   def wait_for_door_cycle(step)
     puts "Waiting for microwave door to open..."
     elapsed = 0
-    until @arduino.info[:door_open]
+    until @microwave.info[:door_open]
       sleep(0.5)
       elapsed += 0.5
 
@@ -128,7 +126,7 @@ class Microwave
 
     puts "Waiting for microwave door to close..."
     elapsed = 0
-    until !@arduino.info[:door_open]
+    until !@microwave.info[:door_open]
       sleep(0.5)
       elapsed += 0.5
 
@@ -147,7 +145,7 @@ class Microwave
     puts "Waiting for microwave door to open..."
     elapsed = 0
     stage = 2
-    until @arduino.info[:door_open]
+    until @microwave.info[:door_open]
       sleep(0.5)
       elapsed += 0.5
 
@@ -170,7 +168,7 @@ class Microwave
     end
 
     # Interrupt the current cooking program if the microwave is off and not paused.
-    if !@arduino.info[:on] && !@arduino.info[:paused]
+    if !@microwave.info[:on] && !@microwave.info[:paused]
       puts "Aborting cooking program! The microwave has been stopped."
       return true
     end

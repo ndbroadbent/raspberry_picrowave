@@ -4,21 +4,21 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#define DEBUG true
+#define DEBUG false
 #define SERIAL_TIMEOUT 1000
 #define VOICE_COMMAND_TIMEOUT 10000   // Allow voice commands up to 10 seconds after the door closes
 
 #define scanDataPin  0
-#define scanLatchPin 1
-#define scanClockPin 2
+#define scanLatchPin 2
+#define scanClockPin 3
 
-#define inputClockPin 3
-#define inputLatchPin 4
-#define inputDataPin  5
+#define inputClockPin 12
+#define inputLatchPin 13
+#define inputDataPin  14
 
-#define outputDataPin  6
-#define outputLatchPin 7
-#define outputClockPin 10
+#define outputDataPin  11
+#define outputLatchPin 10
+#define outputClockPin 6
 
 #define btn0 0
 #define btn1 1
@@ -309,7 +309,7 @@ void stop() {
   currentPower = 0;
 }
 
-void pause() {
+void pauseMicrowave() {
   // Can only pause when microwave is on
   if (on) {
     pushButton(btnTime);
@@ -330,24 +330,24 @@ uint8_t shiftIn2(int dataPin, int clockPin, int latchPin) {
   uint8_t dataIn = 0;
 
   digitalWrite(latchPin, HIGH);
-  delayMicroseconds(30);
+  delayMicroseconds(300);
   digitalWrite(latchPin, LOW);
 
   for (i = 7; i >= 0; i--) {
     digitalWrite(clockPin, LOW);
-    delayMicroseconds(5);
+    delayMicroseconds(300);
     tmp = digitalRead(dataPin);
     if (tmp) {
       dataIn = dataIn | (1 << i);
     }
     digitalWrite(clockPin, HIGH);
+    delayMicroseconds(100);
   }
 
   return dataIn;
 }
 
-
-
+// args: command, param, command_from_voice?
 static VALUE method_send_command(VALUE self, VALUE args) {
   VALUE command, param;
   char * cmdStr;
@@ -380,7 +380,6 @@ static VALUE method_send_command(VALUE self, VALUE args) {
       paramStr = StringValueCStr(param);
 
       for (i = 0; i < sizeof(btnNames) / sizeof(btnNames[0]); i++) {
-        printf("%s\n", btnNames[i]);
         if (strcmp(btnNames[i], paramStr) == 0) {
           pushButton(i);
           break;
@@ -428,7 +427,7 @@ static VALUE method_send_command(VALUE self, VALUE args) {
   }
 
   else if (strcmp(cmdStr, "pause") == 0) {
-    pause();
+    pauseMicrowave();
   }
 
   return self;
@@ -438,115 +437,118 @@ static VALUE method_send_command(VALUE self, VALUE args) {
 VALUE method_get_info(VALUE self) {
   VALUE info = rb_hash_new();
 
-  rb_hash_aset(info, rb_str_new2("on"),            on       ? Qtrue : Qfalse);
-  rb_hash_aset(info, rb_str_new2("paused"),        paused   ? Qtrue : Qfalse);
-  rb_hash_aset(info, rb_str_new2("door_open"),     doorOpen ? Qtrue : Qfalse);
-  rb_hash_aset(info, rb_str_new2("current_power"), INT2FIX(currentPower));
-  rb_hash_aset(info, rb_str_new2("current_time"),  INT2FIX(currentTime));
+  rb_hash_aset(info, ID2SYM(rb_intern("on")),        on       ? Qtrue : Qfalse);
+  rb_hash_aset(info, ID2SYM(rb_intern("paused")),    paused   ? Qtrue : Qfalse);
+  rb_hash_aset(info, ID2SYM(rb_intern("door_open")), doorOpen ? Qtrue : Qfalse);
+  rb_hash_aset(info, ID2SYM(rb_intern("power")),     INT2FIX(currentPower));
+  rb_hash_aset(info, ID2SYM(rb_intern("time")),      INT2FIX(currentTime));
 
   return info;
 }
 
 
+// Can't do an infinite loop in C, or the Ruby interpreter gets locked up
 VALUE method_touchpad_loop(VALUE self) {
-  //for (;;) {
-    inputByte = 0;
-    //              B00000010              B01000000
-    for (scanMask = 0x2; scanMask <= 0x40; scanMask <<= 1) {
-      digitalWrite(scanLatchPin, LOW);
-      shiftOut(scanDataPin, scanClockPin, MSBFIRST, scanMask);
-      digitalWrite(scanLatchPin, HIGH);
+  int validReading = 0;
 
-      // printf("scanMask:\n");
-      // printBinary(scanMask);
+  inputByte = 0;
+  //              B00000010              B01000000
+  for (scanMask = 0x2; scanMask <= 0x40; scanMask <<= 1) {
+    digitalWrite(scanLatchPin, LOW);
+    shiftOut(scanDataPin, scanClockPin, MSBFIRST, scanMask);
+    digitalWrite(scanLatchPin, HIGH);
 
+    // printf("scanMask:\n");
+    // printBinary(scanMask);
+
+    validReading = 0;
+    while (validReading == 0) {
       // Ignore first bit (floating)
       inputByte = shiftIn2(inputDataPin, inputClockPin, inputLatchPin) & 0x7F; // B01111111
+      delay(2);
+      if (inputByte == (shiftIn2(inputDataPin, inputClockPin, inputLatchPin) & 0x7F))
+        validReading = 1;
+    }
 
-      // printf("inputByte:\n");
-      // printBinary(inputByte);
+    // printf("inputByte:\n");
+    // printBinary(inputByte);
 
-      // 1 = closed, 0 = open
-      if (!(inputByte & doorSwitch)) {
-        // Stop if door is opened
-        if (on) { stop(); }
-        if (!doorOpen) {
-          if (DEBUG) { printf("Door is now open.\n"); }
-          doorOpen = true;
-        }
-      } else {
-        // Set door state if door is now closed
-        if (doorOpen) {
-          if (DEBUG) { printf("Door is now closed.\n"); }
-          doorOpen = false;
-          doorTimer = millis(); // Allow voice commands up to 7 seconds after door was closed
-
-          // Check to see if start was pressed while door was open
-          // If so, start the microwave now.
-          if (pendingStart) { start(); }
-        }
+    // 1 = closed, 0 = open
+    if (!(inputByte & doorSwitch)) {
+      // Stop if door is opened
+      if (on) { stop(); }
+      if (!doorOpen) {
+        if (DEBUG) { printf("Door is now open.\n"); }
+        doorOpen = true;
       }
+    } else {
+      // Set door state if door is now closed
+      if (doorOpen) {
+        if (DEBUG) { printf("Door is now closed.\n"); }
+        doorOpen = false;
+        doorTimer = millis(); // Allow voice commands up to 7 seconds after door was closed
 
-      buttonByte = inputByte & buttonMask;
-
-      if (buttonByte != 0) {
-        currentButton = pressedButton(scanMask, buttonByte);
-
-        printf("Touchpad: %s\n", btnNames[currentButton]);
-
-        continue;
-
-        if (currentButton != -1 && currentButton != lastButton) {
-          switch (currentButton) {
-            case newBtnHigh10s: quickStart(10,  POWER_HIGH); break;
-            case newBtnHigh20s: quickStart(20,  POWER_HIGH); break;
-            case newBtnHigh30s: quickStart(30,  POWER_HIGH); break;
-            case newBtnHigh1m:  quickStart(60,  POWER_HIGH); break;
-            case newBtnHigh2m:  quickStart(120, POWER_HIGH); break;
-            case newBtnMed10s:  quickStart(10,  POWER_MEDIUM); break;
-            case newBtnMed20s:  quickStart(20,  POWER_MEDIUM); break;
-            case newBtnMed30s:  quickStart(30,  POWER_MEDIUM); break;
-            case newBtnMed1m:   quickStart(60,  POWER_MEDIUM); break;
-            case newBtnMed2m:   quickStart(120, POWER_MEDIUM); break;
-            case newBtn10s:     incrementTime(10); break;
-            case newBtn10m:     incrementTime(600); break;
-            case newBtn1s:      incrementTime(1); break;
-            case newBtn1m:      incrementTime(60); break;
-            // Can't set power while microwave is on
-            case newBtnHigh:    if (!on) { setPower(POWER_HIGH); }; break;
-            case newBtnMed:     if (!on) { setPower(POWER_MEDIUM); }; break;
-            case newBtnLow:     if (!on) { setPower(POWER_LOW); }; break;
-            case newBtnDefrost: if (!on) { setPower(POWER_DEFROST); }; break;
-            case newBtnStart:   start(); break;
-            case newBtnStop:    stop(); break;
-          }
-
-          lastButton = currentButton;
-        }
-
-        buttonTimer = millis();
-      } else {
-        // Debounce buttons with 100ms delay
-        if (lastButton != -1 && millis() - 100 > buttonTimer) {
-          lastButton = -1;
-          buttonTimer = 0;
-        }
+        // Check to see if start was pressed while door was open
+        // If so, start the microwave now.
+        if (pendingStart) { start(); }
       }
     }
 
-    if (on) {
-      // Decrement time counter every 1000ms
-      if (millis() - 1000 > countdownTimer) {
-        countdownTimer = millis();
-        currentTime -= 1;
-        if (currentTime <= 0) {
-          stop();
+    buttonByte = inputByte & buttonMask;
+
+    if (buttonByte != 0) {
+      currentButton = pressedButton(scanMask, buttonByte);
+
+      if (currentButton != -1 && currentButton != lastButton) {
+        switch (currentButton) {
+          case newBtnHigh10s: quickStart(10,  POWER_HIGH); break;
+          case newBtnHigh20s: quickStart(20,  POWER_HIGH); break;
+          case newBtnHigh30s: quickStart(30,  POWER_HIGH); break;
+          case newBtnHigh1m:  quickStart(60,  POWER_HIGH); break;
+          case newBtnHigh2m:  quickStart(120, POWER_HIGH); break;
+          case newBtnMed10s:  quickStart(10,  POWER_MEDIUM); break;
+          case newBtnMed20s:  quickStart(20,  POWER_MEDIUM); break;
+          case newBtnMed30s:  quickStart(30,  POWER_MEDIUM); break;
+          case newBtnMed1m:   quickStart(60,  POWER_MEDIUM); break;
+          case newBtnMed2m:   quickStart(120, POWER_MEDIUM); break;
+          case newBtn10s:     incrementTime(10); break;
+          case newBtn10m:     incrementTime(600); break;
+          case newBtn1s:      incrementTime(1); break;
+          case newBtn1m:      incrementTime(60); break;
+          // Can't set power while microwave is on
+          case newBtnHigh:    if (!on) { setPower(POWER_HIGH); }; break;
+          case newBtnMed:     if (!on) { setPower(POWER_MEDIUM); }; break;
+          case newBtnLow:     if (!on) { setPower(POWER_LOW); }; break;
+          case newBtnDefrost: if (!on) { setPower(POWER_DEFROST); }; break;
+          case newBtnStart:   start(); break;
+          case newBtnStop:    stop(); break;
         }
+
+        lastButton = currentButton;
+      }
+
+      buttonTimer = millis();
+    } else {
+      // Debounce buttons with 100ms delay
+      if (lastButton != -1 && millis() - 100 > buttonTimer) {
+        lastButton = -1;
+        buttonTimer = 0;
       }
     }
+  }
 
-    //delay(5);
-  //}
+  if (on) {
+    // Decrement time counter every 1000ms
+    if (millis() - 1000 > countdownTimer) {
+      countdownTimer = millis();
+      currentTime -= 1;
+      if (currentTime <= 0) {
+        stop();
+      }
+    }
+  }
+
+  delay(10);
 
   return self;
 }

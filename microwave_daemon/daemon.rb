@@ -6,7 +6,7 @@ require 'rubygems'
 require 'socket'
 require 'thread'
 require 'json'
-require File.expand_path('../lib/ext/microwave', __FILE__)
+require File.expand_path('../microwave', __FILE__)
 
 PORT = 3141
 
@@ -14,7 +14,9 @@ PORT = 3141
 @server    = TCPServer.new(PORT)
 
 Thread.start(@microwave) do |m|
-  m.touchpad_loop
+  while true
+    m.touchpad_loop
+  end
 end
 
 loop do
@@ -27,11 +29,35 @@ loop do
 
         if request['get_info']
           # Fetch info and send to TCP client
-          client.puts(@microwave.get_info)
+          client.puts(@microwave.get_info.to_json)
 
         elsif command = request['command']
-          puts "Sending command to Microwave: #{command}"
-          @microwave.send_command(command)
+          # Examples:
+          #   {"command":{"time":10}}
+          #   {"command":{"time":5,"power":7}}
+          #   {"command":"start"}
+
+          commands = []
+          if command.is_a?(String)
+            commands << [command, nil]
+
+          elsif command.is_a?(Hash)
+            start = command.delete("start")
+
+            command.each {|k, v| commands << [k, v] }
+
+            commands << ["start", nil] if start
+          end
+
+          commands.each do |cmd|
+            puts "Sending command to Microwave: #{cmd.inspect}"
+
+            # Tell microwave that this came from a random voice.
+            # (prevents actions when people are just talking in kitchen)
+            cmd << true if request['latent_voice']
+
+            @microwave.send_command(*cmd)
+          end
         end
       end
 
