@@ -8,7 +8,6 @@ class AudioPlayer
     private
 
     def play(file)
-      puts "Playing: #{file}"
       path = File.expand_path("../../../audio/#{file}.mp3", __FILE__)
       if File.exist?(path)
         `mpg123 "#{path}" > /dev/null 2>&1`

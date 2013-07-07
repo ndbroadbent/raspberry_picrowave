@@ -289,8 +289,6 @@ void start() {
   // Only start if door is closed
   if (!doorOpen) {
     if (currentTime > 0) {
-      playSound("start");
-
       pushButton(btnStart);
       on = true;
       paused = false;
@@ -299,6 +297,7 @@ void start() {
       doorTimer = 0;
       // Set countdown timer to decrement time remaining
       countdownTimer = millis();
+      playSound("start");
     }
   } else {
     // Record the fact that start was pushed while the door was open.
@@ -507,20 +506,6 @@ VALUE method_touchpad_loop(VALUE self) {
       currentButton = pressedButton(scanMask, buttonByte);
 
       if (currentButton != -1 && currentButton != lastButton) {
-        // Only play button sound for time and power buttons
-        switch (currentButton) {
-          case newBtn10s:
-          case newBtn10m:
-          case newBtn1s:
-          case newBtn1m:
-          case newBtnHigh:
-          case newBtnMed:
-          case newBtnLow:
-          case newBtnDefrost:
-            playSound("button");
-            break;
-        }
-
         switch (currentButton) {
           case newBtnHigh10s: quickStart(10,  POWER_HIGH); break;
           case newBtnHigh20s: quickStart(20,  POWER_HIGH); break;
@@ -542,7 +527,21 @@ VALUE method_touchpad_loop(VALUE self) {
           case newBtnLow:     if (!on) { setPower(POWER_LOW); }; break;
           case newBtnDefrost: if (!on) { setPower(POWER_DEFROST); }; break;
           case newBtnStart:   start(); break;
-          case newBtnStop:    playSound("stop"); stop(); break;
+          case newBtnStop:    stop(); playSound("stop"); break;
+        }
+
+        // Only play button sound for time and power buttons
+        switch (currentButton) {
+          case newBtn10s:
+          case newBtn10m:
+          case newBtn1s:
+          case newBtn1m:
+          case newBtnHigh:
+          case newBtnMed:
+          case newBtnLow:
+          case newBtnDefrost:
+            playSound("button");
+            break;
         }
 
         lastButton = currentButton;
@@ -565,6 +564,7 @@ VALUE method_touchpad_loop(VALUE self) {
       currentTime -= 1;
       if (currentTime <= 0) {
         stop();
+        playSound("finished");
       }
     }
   }
