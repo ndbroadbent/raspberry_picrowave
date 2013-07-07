@@ -23,6 +23,7 @@ def fetch_info
 end
 
 get '/' do
+  @barcodes = []
   if File.exists?(settings.barcodes_file)
     @barcodes = YAML.load_file(settings.barcodes_file)
   end
@@ -32,12 +33,24 @@ get '/' do
   erb :touchpad
 end
 
+post '/clear_barcodes' do
+  if File.exists?(settings.barcodes_file)
+    File.delete(settings.barcodes_file)
+  end
+  redirect to('/')
+end
+
 get '/info.json' do
+  @barcodes = []
+  if File.exists?(settings.barcodes_file)
+    @barcodes = YAML.load_file(settings.barcodes_file)
+  end
+
   fetch_info
   @info ||= {error: true}
 
   content_type :json
-  @info.to_json
+  {info: @info, barcodes: @barcodes}.to_json
 end
 
 get '/button/:name' do

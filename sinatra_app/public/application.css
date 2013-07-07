@@ -34,6 +34,11 @@ body {
   margin-left: 50px;
 }
 
+.barcodes form {
+  margin-top: 20px;
+  text-align: center;
+}
+
 .screen {
   width: 221px;
   height: 90px;
