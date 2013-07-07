@@ -8,7 +8,17 @@ configure do
   set :bind, '0.0.0.0'
   set :port, '80'
 
-  set :microwave, Microwave::Daemon::Client.new
+  connected = false
+  while !connected
+    begin
+      set :microwave, Microwave::Daemon::Client.new
+      connected = true
+    rescue
+      puts "Could not connect to microwave daemon... retrying after 1s"
+      sleep 1
+    end
+  end
+
   set :barcodes_file, File.expand_path("../unknown_barcodes.yml", __FILE__)
 end
 
@@ -16,10 +26,30 @@ def fetch_info
   begin
     settings.microwave.fetch_info
     @info = settings.microwave.info
-    @info[:formatted_time] = (Time.mktime(@info[:time].to_i)).strftime("%-M:%S")
+
+    seconds = @info[:time].to_i % 60
+    minutes = @info[:time].to_i / 60
+    @info[:formatted_time] = format("%d:%02d", minutes, seconds)
+
+    @info[:power_string] = case @info[:power]
+    when 0
+      "Off"
+    when 3
+      "Defrost"
+    when 5
+      "Low"
+    when 7
+      "Medium"
+    when 10
+      "High"
+    else
+      @info[:power]
+    end
   rescue
     @info = nil
   end
+
+  puts @info.inspect
 end
 
 get '/' do
@@ -54,6 +84,6 @@ get '/info.json' do
 end
 
 get '/button/:name' do
-  puts params[:name]
-
+  puts "Pressing button: #{params[:name]}"
+  settings.microwave.send_request(:command => {new_button: params[:name]})
 end

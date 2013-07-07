@@ -105,6 +105,29 @@ char btnNames[][15] = {
   "Start"
 };
 
+char btnNamesNew[][22] = {
+  "Quickstart Medium 2m",
+  "Quickstart High 10s",
+  "Quickstart High 20s",
+  "Quickstart High 30s",
+  "Quickstart High 1m",
+  "Quickstart High 2m",
+  "Quickstart Medium 10s",
+  "Quickstart Medium 20s",
+  "Quickstart Medium 30s",
+  "Quickstart Medium 1m",
+  "Start",
+  "Stop",
+  "Time 10s",
+  "Time 10m",
+  "Power Medium",
+  "Power Defrost",
+  "Time 1s",
+  "Time 1m",
+  "Power High",
+  "Power Low"
+};
+
 uint8_t inputByte, buttonByte, scanMask;
 int currentButton = -1;
 int lastButton = -1;
@@ -353,6 +376,46 @@ uint8_t shiftIn2(int dataPin, int clockPin, int latchPin) {
   return dataIn;
 }
 
+void pushNewButton(int button) {
+  // Only play button sound for time and power buttons
+  switch (button) {
+    case newBtn10s:
+    case newBtn10m:
+    case newBtn1s:
+    case newBtn1m:
+    case newBtnHigh:
+    case newBtnMed:
+    case newBtnLow:
+    case newBtnDefrost:
+      playSound("button");
+      break;
+  }
+
+  switch (button) {
+    case newBtnHigh10s: quickStart(10,  POWER_HIGH); break;
+    case newBtnHigh20s: quickStart(20,  POWER_HIGH); break;
+    case newBtnHigh30s: quickStart(30,  POWER_HIGH); break;
+    case newBtnHigh1m:  quickStart(60,  POWER_HIGH); break;
+    case newBtnHigh2m:  quickStart(120, POWER_HIGH); break;
+    case newBtnMed10s:  quickStart(10,  POWER_MEDIUM); break;
+    case newBtnMed20s:  quickStart(20,  POWER_MEDIUM); break;
+    case newBtnMed30s:  quickStart(30,  POWER_MEDIUM); break;
+    case newBtnMed1m:   quickStart(60,  POWER_MEDIUM); break;
+    case newBtnMed2m:   quickStart(120, POWER_MEDIUM); break;
+    case newBtn10s:     incrementTime(10); break;
+    case newBtn10m:     incrementTime(600); break;
+    case newBtn1s:      incrementTime(1); break;
+    case newBtn1m:      incrementTime(60); break;
+    // Can't set power while microwave is on
+    case newBtnHigh:    if (!on) { setPower(POWER_HIGH); }; break;
+    case newBtnMed:     if (!on) { setPower(POWER_MEDIUM); }; break;
+    case newBtnLow:     if (!on) { setPower(POWER_LOW); }; break;
+    case newBtnDefrost: if (!on) { setPower(POWER_DEFROST); }; break;
+    case newBtnStart:   start(); break;
+    case newBtnStop:    stop(); playSound("stop"); break;
+  }
+}
+
 // args: command, param, command_from_voice?
 static VALUE method_send_command(VALUE self, VALUE args) {
   VALUE command, param;
@@ -388,6 +451,19 @@ static VALUE method_send_command(VALUE self, VALUE args) {
       for (i = 0; i < sizeof(btnNames) / sizeof(btnNames[0]); i++) {
         if (strcmp(btnNames[i], paramStr) == 0) {
           pushButton(i);
+          break;
+        }
+      }
+    }
+  }
+
+  if (strcmp(cmdStr, "new_button") == 0) {
+    if (TYPE(param) == T_STRING) {
+      paramStr = StringValueCStr(param);
+
+      for (i = 0; i < sizeof(btnNamesNew) / sizeof(btnNamesNew[0]); i++) {
+        if (strcmp(btnNamesNew[i], paramStr) == 0) {
+          pushNewButton(i);
           break;
         }
       }
@@ -506,43 +582,7 @@ VALUE method_touchpad_loop(VALUE self) {
       currentButton = pressedButton(scanMask, buttonByte);
 
       if (currentButton != -1 && currentButton != lastButton) {
-        // Only play button sound for time and power buttons
-        switch (currentButton) {
-          case newBtn10s:
-          case newBtn10m:
-          case newBtn1s:
-          case newBtn1m:
-          case newBtnHigh:
-          case newBtnMed:
-          case newBtnLow:
-          case newBtnDefrost:
-            playSound("button");
-            break;
-        }
-
-        switch (currentButton) {
-          case newBtnHigh10s: quickStart(10,  POWER_HIGH); break;
-          case newBtnHigh20s: quickStart(20,  POWER_HIGH); break;
-          case newBtnHigh30s: quickStart(30,  POWER_HIGH); break;
-          case newBtnHigh1m:  quickStart(60,  POWER_HIGH); break;
-          case newBtnHigh2m:  quickStart(120, POWER_HIGH); break;
-          case newBtnMed10s:  quickStart(10,  POWER_MEDIUM); break;
-          case newBtnMed20s:  quickStart(20,  POWER_MEDIUM); break;
-          case newBtnMed30s:  quickStart(30,  POWER_MEDIUM); break;
-          case newBtnMed1m:   quickStart(60,  POWER_MEDIUM); break;
-          case newBtnMed2m:   quickStart(120, POWER_MEDIUM); break;
-          case newBtn10s:     incrementTime(10); break;
-          case newBtn10m:     incrementTime(600); break;
-          case newBtn1s:      incrementTime(1); break;
-          case newBtn1m:      incrementTime(60); break;
-          // Can't set power while microwave is on
-          case newBtnHigh:    if (!on) { setPower(POWER_HIGH); }; break;
-          case newBtnMed:     if (!on) { setPower(POWER_MEDIUM); }; break;
-          case newBtnLow:     if (!on) { setPower(POWER_LOW); }; break;
-          case newBtnDefrost: if (!on) { setPower(POWER_DEFROST); }; break;
-          case newBtnStart:   start(); break;
-          case newBtnStop:    stop(); playSound("stop"); break;
-        }
+        pushNewButton(currentButton);
 
         lastButton = currentButton;
       }

@@ -206,19 +206,19 @@ class Microwave
     `mpg123 "#{path}" > /dev/null 2>&1`
   end
 
-  SINATRA_BARCODES_FILE = File.expand_path("../../../sinatra_app/unknown_barcodes.yml", __FILE__)
+  UNKNOWN_BARCODES_FILE = File.expand_path("../../../sinatra_app/unknown_barcodes.yml", __FILE__)
 
   # Save the last 10 unique unknown upc barcodes to display in the Sinatra app
   def save_unknown_upc_for_sinatra(upc)
-    if File.exists?(unknown_barcodes_file)
-      unknown_barcodes = YAML.load_file(SINATRA_BARCODES_FILE)
+    if File.exists?(UNKNOWN_BARCODES_FILE)
+      unknown_barcodes = YAML.load_file(UNKNOWN_BARCODES_FILE)
     else
       unknown_barcodes = []
     end
 
     unknown_barcodes << upc
 
-    File.open(unknown_barcodes_file, 'w') do |f|
+    File.open(UNKNOWN_BARCODES_FILE, 'w') do |f|
       f.puts unknown_barcodes.uniq[0,10].to_yaml
     end
   end

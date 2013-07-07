@@ -16,7 +16,7 @@ $(function(){
         $('.screen .on').html(info.on ? 'On' : 'Off');
         $('.screen .door').html(info.door_open ? 'Open' : 'Closed');
         $('.screen .time').html(info.formatted_time);
-        $('.screen .power').html(info.power);
+        $('.screen .power').html(info.power_string);
       }
 
       if (barcodes.length){
