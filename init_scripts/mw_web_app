@@ -1,0 +1,44 @@
+#! /bin/sh
+# /etc/init.d/mw_web_app
+
+### BEGIN INIT INFO
+# Provides:          mw_web_app
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Microwave Web App
+# Description:       Manage Microwave Web App process
+### END INIT INFO
+
+# Find PID of current process
+PID=$(ps aux | grep '[r]uby \./mw_web_app\.rb' | awk '{print $2}' | head -n1)
+
+case "$1" in
+  start)
+    if [ -n "$PID" ]; then
+      echo "mw_web_app is already running."
+    else
+      echo "Starting mw_web_app..."
+      mw_web_app &
+    fi
+    ;;
+  stop)
+    if [ -n "$PID" ]; then
+      echo "Stopping mw_web_app..."
+      kill $PID
+    else
+      echo "mw_web_app is not running."
+    fi
+    ;;
+  restart)
+    $0 stop
+    $0 start
+    ;;
+  *)
+    echo "Usage: /etc/init.d/mw_web_app {start|stop|restart}"
+    exit 1
+    ;;
+esac
+
+exit 0
