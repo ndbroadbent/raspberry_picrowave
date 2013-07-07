@@ -5,8 +5,7 @@ require 'json'
 require File.expand_path('../../microwave_daemon/lib/client', __FILE__)
 
 configure do
-  set :bind, '0.0.0.0'
-  set :port, '80'
+  set server: 'thin', bind: '0.0.0.0', port: '80', connections: []
 
   connected = false
   while !connected
@@ -25,13 +24,13 @@ end
 def fetch_info
   begin
     settings.microwave.fetch_info
-    @info = settings.microwave.info
+    info = settings.microwave.info
 
-    seconds = @info[:time].to_i % 60
-    minutes = @info[:time].to_i / 60
-    @info[:formatted_time] = format("%d:%02d", minutes, seconds)
+    seconds = info[:time].to_i % 60
+    minutes = info[:time].to_i / 60
+    info[:formatted_time] = format("%d:%02d", minutes, seconds)
 
-    @info[:power_string] = case @info[:power]
+    info[:power_string] = case info[:power]
     when 0
       "Off"
     when 3
@@ -43,13 +42,13 @@ def fetch_info
     when 10
       "High"
     else
-      @info[:power]
+      info[:power]
     end
   rescue
-    @info = nil
+    info = nil
   end
 
-  puts @info.inspect
+  return info
 end
 
 get '/' do
@@ -58,7 +57,7 @@ get '/' do
     @barcodes = YAML.load_file(settings.barcodes_file)
   end
 
-  fetch_info
+  @info = fetch_info
 
   erb :touchpad
 end
@@ -70,17 +69,41 @@ post '/clear_barcodes' do
   redirect to('/')
 end
 
-get '/info.json' do
-  @barcodes = []
-  if File.exists?(settings.barcodes_file)
-    @barcodes = YAML.load_file(settings.barcodes_file)
+get '/events', provides: 'text/event-stream' do
+  response.headers['X-Accel-Buffering'] = 'no' # Disable buffering for nginx
+  stream :keep_open do |out|
+    settings.connections << out
+    out.callback { settings.connections.delete(out) }
   end
+end
 
-  fetch_info
-  @info ||= {error: true}
+def format_event(body)
+  "data: #{body}\n\n"
+end
 
-  content_type :json
-  {info: @info, barcodes: @barcodes}.to_json
+info_thread = Thread.new do
+  previous_data = nil
+  while true
+    if settings.connections.any?
+      if File.exists?(settings.barcodes_file)
+        barcodes = YAML.load_file(settings.barcodes_file)
+      else
+        barcodes = []
+      end
+      info = fetch_info || {error: true}
+
+      data = {info: info, barcodes: barcodes}
+
+      if data != previous_data
+        event = format_event(data.to_json)
+        settings.connections.each { |out| out << event }
+
+        previous_data = data
+      end
+    end
+
+    sleep 0.2
+  end
 end
 
 get '/button/:name' do

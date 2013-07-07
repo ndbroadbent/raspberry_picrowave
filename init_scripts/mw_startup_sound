@@ -1,0 +1,16 @@
+#! /bin/sh
+# /etc/init.d/mw_startup_sound
+
+### BEGIN INIT INFO
+# Provides:          mw_startup_sound
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Play Microwave Startup Sound
+# Description:       Play Microwave Startup Sound on boot
+### END INIT INFO
+
+/usr/bin/mpg123 /home/ndbroadbent/raspberry_picrowave/audio/startup.mp3
+
+exit 0

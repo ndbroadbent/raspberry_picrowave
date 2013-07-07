@@ -4,6 +4,8 @@
     <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
     <link href='http://fonts.googleapis.com/css?family=Merriweather+Sans:400,700' rel='stylesheet' type='text/css'>
     <link href='/application.css' rel='stylesheet' type='text/css'>
+
+    <title>Raspberry Microwave</title>
   </head>
 
   <body>
@@ -11,12 +13,12 @@
       <h3>Unknown Barcodes</h3>
       <ul class="barcodes-list">
         <% @barcodes.each do |barcode| %>
-          <li><%= barcode %></li>
+          <li><%= barcode %>: <a href="">Add Product</a></li>
         <% end %>
       </ul>
 
       <form action="/clear_barcodes" method="post">
-        <input class="clear_barcodes" type="submit" value="Clear barcodes">
+        <input class="clear_barcodes btn btn-danger" type="submit" value="Clear barcodes">
       </form>
     </div>
 

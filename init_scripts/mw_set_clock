@@ -12,7 +12,7 @@
 ### END INIT INFO
 
 # Just run the set clock program after a delay
-sleep 10
+sleep 20
 /usr/bin/mw_set_clock
 
 exit 0
