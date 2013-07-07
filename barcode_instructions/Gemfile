@@ -1,0 +1,7 @@
+source 'http://rubygems.org'
+gem 'bundler', '>= 1.2.0'
+
+gem 'httparty'
+gem 'confstruct'
+gem 'barby'
+gem 'libdevinput'

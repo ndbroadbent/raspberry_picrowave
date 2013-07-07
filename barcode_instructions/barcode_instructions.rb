@@ -8,12 +8,22 @@ require 'rubygems'
 require 'yaml'
 require 'thread'
 require 'microwave'
+require 'microwave_cooking_db'
+require 'confstruct'
+
+Config = Confstruct::Configuration.new(YAML.load_file(File.expand_path("../config.yml", __FILE__)))
+
+Twitter.configure do |config|
+  config.consumer_key       = Config.twitter.consumer_key
+  config.consumer_secret    = Config.twitter.consumer_secret
+  config.oauth_token        = Config.twitter.oauth_token
+  config.oauth_token_secret = Config.twitter.oauth_token_secret
+end
 
 connected = false
 until connected
   begin
-    preparation_steps = YAML.load_file(File.expand_path('../upc_preparation_steps.yml', __FILE__))
-    @microwave = Microwave.new(preparation_steps)
+    @microwave = Microwave.new
     connected = true
   rescue Exception => ex
     puts ex.inspect

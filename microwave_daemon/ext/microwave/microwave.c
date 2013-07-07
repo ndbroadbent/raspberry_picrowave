@@ -124,6 +124,12 @@ char serCommand, serParams;
 unsigned long serialTimer, buttonTimer, countdownTimer, doorTimer;
 
 
+VALUE rbMicrowaveExt, rbAudioPlayerModule;
+
+void playSound(const char *methodName) {
+  rb_funcall(rbAudioPlayerModule, rb_intern(methodName), 0, NULL);
+}
+
 void printBinary(uint8_t var) {
   uint8_t mask;
   for (mask = 0x80; mask; mask >>= 1) {  // B10000000
@@ -284,6 +290,8 @@ void start() {
   // Only start if door is closed
   if (!doorOpen) {
     if (currentTime > 0) {
+      playSound("start");
+
       pushButton(btnStart);
       on = true;
       paused = false;
@@ -500,6 +508,8 @@ VALUE method_touchpad_loop(VALUE self) {
       currentButton = pressedButton(scanMask, buttonByte);
 
       if (currentButton != -1 && currentButton != lastButton) {
+        playSound("button");
+
         switch (currentButton) {
           case newBtnHigh10s: quickStart(10,  POWER_HIGH); break;
           case newBtnHigh20s: quickStart(20,  POWER_HIGH); break;
@@ -553,8 +563,6 @@ VALUE method_touchpad_loop(VALUE self) {
   return self;
 }
 
-VALUE MicrowaveExt;
-
 // The initialization method for this module
 void Init_microwave() {
   if (wiringPiSetup() == -1)
@@ -574,8 +582,10 @@ void Init_microwave() {
   pinMode(outputClockPin, OUTPUT);
 
   // Setup class
-  MicrowaveExt = rb_define_class("MicrowaveExt", rb_cObject);
-  rb_define_method(MicrowaveExt, "touchpad_loop", method_touchpad_loop, 0);
-  rb_define_method(MicrowaveExt, "send_command", method_send_command, -2);
-  rb_define_method(MicrowaveExt, "get_info", method_get_info, 0);
+  rbMicrowaveExt = rb_define_class("rbMicrowaveExt", rb_cObject);
+  rb_define_method(rbMicrowaveExt, "touchpad_loop", method_touchpad_loop, 0);
+  rb_define_method(rbMicrowaveExt, "send_command", method_send_command, -2);
+  rb_define_method(rbMicrowaveExt, "get_info", method_get_info, 0);
+
+  rbMicrowaveModule = rb_const_get(rb_cObject, rb_intern("AudioPlayer"));
 }

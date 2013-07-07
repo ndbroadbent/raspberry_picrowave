@@ -1,0 +1,64 @@
+body {
+  background-color: #779;
+  font-family: 'Merriweather Sans', serif;
+  color: white;
+}
+
+.btn {
+  font-family: 'Merriweather Sans', serif;
+  box-shadow: 0 1px 3px #111 !important;
+  font-weight: bold;
+}
+
+.container {
+  width: 270px;
+  padding: 12px;
+  text-align: center;
+  background-image: url("touchpad-background.jpg");
+}
+
+.screen {
+  width: 221px;
+  height: 90px;
+  background-color: #222;
+  border: 4px solid #555;
+  margin: auto;
+  margin-bottom: 55px;
+  margin-top: 25px;
+}
+
+.buttons {
+  position: relative;
+}
+
+.btn-row { margin-bottom: 26px; clear: both; }
+
+.main .btn {
+  width: 95px;
+  margin-bottom: 22px;
+  font-size: 15px;
+}
+.main .btn-row { padding: 0 28px;}
+
+.main .btn:first-child { float: left; }
+.main .btn:last-child  { float: right; }
+
+.raspberry-pi-logo {
+  width: 75px;
+  position: absolute;
+  top: 120px;
+  left: 34px;
+}
+
+.controls .btn {
+  float: right;
+}
+.power .btn { font-size: 14px; }
+
+/*      .power .btn-row, .time .btn-row {
+  padding: 0 20px;
+}*/
+
+.autostart-info {
+  margin: 0;
+}

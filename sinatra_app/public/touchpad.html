@@ -1,0 +1,75 @@
+<html>
+
+  <head>
+    <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.min.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Merriweather+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link href='/application.css' rel='stylesheet' type='text/css'>
+  </head>
+
+  <body>
+    <div class="container">
+
+      <div class="screen">
+      </div>
+
+      <div class="buttons">
+        <div class="autostart-times">
+          <div class="btn-row">
+            <button type="button" data-name="quickstart_high_10s" class="btn btn-danger">10s</button>
+            <button type="button" data-name="quickstart_high_20s" class="btn btn-danger">20s</button>
+            <button type="button" data-name="quickstart_high_30s" class="btn btn-danger">30s</button>
+            <button type="button" data-name="quickstart_high_1m" class="btn btn-danger">1m</button>
+            <button type="button" data-name="quickstart_high_2m" class="btn btn-danger">2m</button>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" data-name="quickstart_medium_10s" class="btn btn-warning">10s</button>
+            <button type="button" data-name="quickstart_medium_20s" class="btn btn-warning">20s</button>
+            <button type="button" data-name="quickstart_medium_30s" class="btn btn-warning">30s</button>
+            <button type="button" data-name="quickstart_medium_1m" class="btn btn-warning">1m</button>
+            <button type="button" data-name="quickstart_medium_2m" class="btn btn-warning">2m</button>
+          </div>
+        </div>
+
+        <div class="main">
+
+          <img class="raspberry-pi-logo" src="Raspberry_Pi_Logo.png">
+
+          <div class="controls">
+            <div class="btn-row">
+                <button type="button" data-name="start" class="btn btn-success btn-large">Start</button>
+            </div>
+            <div class="btn-row">
+              <button type="button" data-name="stop" class="btn btn-inverse btn-large">Stop</button>
+            </div>
+          </div>
+
+          <div class="time">
+            <div class="btn-row">
+              <button type="button" data-name="time_1s" class="btn btn-large"><i class="icon-plus"></i> 1s</button>
+              <button type="button" data-name="time_10s" class="btn btn-large"><i class="icon-plus"></i> 10s</button>
+            </div>
+            <div class="btn-row">
+              <button type="button" data-name="time_1m" class="btn btn-large"><i class="icon-plus"></i> 1m</button>
+              <button type="button" data-name="time_10m" class="btn btn-large"><i class="icon-plus"></i> 10m</button>
+            </div>
+          </div>
+
+          <div class="power">
+            <div class="btn-row">
+              <button type="button" data-name="power_high" class="btn btn-danger btn-large">High</button>
+              <button type="button" data-name="power_medium" class="btn btn-warning btn-large">Medium</button>
+            </div>
+            <div class="btn-row ">
+              <button type="button" data-name="power_low" class="btn btn-primary btn-large">Low</button>
+              <button type="button" data-name="power_defrost" class="btn btn-info btn-large">Defrost</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="text/javascript" src="/jquery-1.10.1.min.js"></script>
+    <script type="text/javascript" src="/application.js"></script>
+  </body>
+</html>

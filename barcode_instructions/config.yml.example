@@ -1,0 +1,9 @@
+mwcdb: # Microwave Cooking Database
+  api_key:
+  email:
+
+twitter:
+  consumer_key:
+  consumer_secret:
+  oauth_token:
+  oauth_token_secret

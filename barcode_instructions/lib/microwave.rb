@@ -3,13 +3,32 @@ require 'microwave/barcode_scanner'
 require 'microwave/cooking_step'
 
 class Microwave
+  TWEET_PREFIXES = [
+    "Just finished cooking up some",
+    "Just cooked some",
+    "Just finished cooking some",
+    "Just heated up some",
+    "Finished cooking"
+  ]
+
+  TWEET_SUFFIXES = [
+    "I bet it tastes pretty good!",
+    "I would totally eat it, if only I had a mouth.",
+    "I'm pretty sure it tastes like chicken. Or maybe tasty wheat.",
+    "I hope they like it!",
+    "I cooked it with my microwaves.",
+    "Mmmmmm, tastes like 2.45 GHz non-ionizing radiation.",
+    ""
+  ]
+
   attr_accessor :arduino, :barcode_scanner
 
   def initialize(preparation_steps)
-    @preparation_steps = preparation_steps
-    @microwave           = Daemon::Client.new
+    @microwave         = Daemon::Client.new
     @barcode_scanner   = BarcodeScanner.new
-    @upc_queue         = Queue.new
+    @product_queue     = Queue.new
+
+    @mwcdb_client = MicrowaveCookingDB.new
   end
 
   def start_thread!(method)
@@ -49,18 +68,18 @@ class Microwave
 
   def fetch_barcodes
     @barcode_scanner.listen! do |upc|
-      if @preparation_steps[upc]
-        @upc_queue << upc
+      product = @mwcdb_client.find(upc)
+      if product
+        @product_queue << product
       else
-        play "not_found.mp3" # Sorry, I don't know how to cook that!
+        play "not_found" # Sorry, I don't know how to cook that!
       end
     end
   end
 
   def process_barcodes
     while true
-      upc = @upc_queue.pop
-      product = @preparation_steps[upc]
+      product = @product_queue.pop
 
       puts "Cooking: #{product['name']}"
 
@@ -99,6 +118,9 @@ class Microwave
 
             @microwave.pause
           else
+            # Finished!
+            Twitter.update("#{TWEET_PREFIXES.sample} #{product["name"]}! #{TWEET_SUFFIXES.sample}")
+
             wait_for_food_to_be_taken
           end
         end
@@ -114,7 +136,7 @@ class Microwave
       elapsed += 0.5
 
       if elapsed % 30 == 0
-        play "seriously.mp3" # Seriously, what are you doing?
+        play "seriously" # Seriously, what are you doing?
       end
       if elapsed % 15 == 0
         # Repeat instructions if there is a delay
@@ -131,7 +153,7 @@ class Microwave
       elapsed += 0.5
 
       if elapsed % 15 == 0
-        play "close_the_door.mp3" # "Please close the door. I'm getting cold."
+        play "close_the_door" # "Please close the door. I'm getting cold."
       end
       return false if check_for_interrupt
     end
@@ -140,7 +162,7 @@ class Microwave
   end
 
   def wait_for_food_to_be_taken
-    play "ready1.mp3"
+    play "ready1"
 
     puts "Waiting for microwave door to open..."
     elapsed = 0
@@ -150,7 +172,7 @@ class Microwave
       elapsed += 0.5
 
       if elapsed == 25
-        play "ready#{stage}.mp3"
+        play "ready#{stage}"
         stage += 1
         stage = 2 if stage > 4
         elapsed = 0
@@ -159,11 +181,11 @@ class Microwave
   end
 
   def check_for_interrupt
-    if !@upc_queue.empty?
-      play "busy.mp3" # I'm busy! Please don't scan any more bar-codes.
+    if !@product_queue.empty?
+      play "busy" # I'm busy! Please don't scan any more bar-codes.
 
-      # Clear barcodes queue and keep the current program going.
-      @upc_queue.clear
+      # Clear product_queue and keep the current program going.
+      @product_queue.clear
       return false
     end
 
@@ -176,7 +198,7 @@ class Microwave
 
   def play(file)
     puts "Playing: #{file}"
-    path = File.expand_path("../../../audio/#{file}", __FILE__)
+    path = File.expand_path("../../../audio/#{file}.mp3", __FILE__)
     `mpg123 "#{path}" > /dev/null 2>&1`
   end
 end
