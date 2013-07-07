@@ -5,3 +5,6 @@ gem 'httparty'
 gem 'confstruct'
 gem 'barby'
 gem 'libdevinput'
+gem 'twitter'
+
+gem 'debugger'

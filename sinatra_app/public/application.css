@@ -11,10 +11,27 @@ body {
 }
 
 .container {
+  margin-top: 40px;
   width: 270px;
   padding: 12px;
   text-align: center;
   background-image: url("touchpad-background.jpg");
+}
+
+.barcodes {
+  background-color: #668;
+  border: 3px solid #557;
+  width: 264px;
+  padding: 12px;
+  margin: auto;
+}
+
+.barcodes h3 {
+  text-align: center;
+}
+
+.barcodes li {
+  margin-left: 50px;
 }
 
 .screen {
@@ -26,6 +43,15 @@ body {
   margin-bottom: 55px;
   margin-top: 25px;
 }
+
+.screen table {
+  font-size: 14px;
+  text-align: center;
+  margin: auto;
+  margin-top: 4px;
+}
+.screen table th { font-weight: normal; text-align: right; }
+.screen table td { font-weight: bold;   text-align: left; padding-left: 8px; }
 
 .buttons {
   position: relative;

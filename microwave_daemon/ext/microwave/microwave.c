@@ -506,6 +506,20 @@ VALUE method_touchpad_loop(VALUE self) {
       currentButton = pressedButton(scanMask, buttonByte);
 
       if (currentButton != -1 && currentButton != lastButton) {
+        // Only play button sound for time and power buttons
+        switch (currentButton) {
+          case newBtn10s:
+          case newBtn10m:
+          case newBtn1s:
+          case newBtn1m:
+          case newBtnHigh:
+          case newBtnMed:
+          case newBtnLow:
+          case newBtnDefrost:
+            playSound("button");
+            break;
+        }
+
         switch (currentButton) {
           case newBtnHigh10s: quickStart(10,  POWER_HIGH); break;
           case newBtnHigh20s: quickStart(20,  POWER_HIGH); break;
@@ -528,20 +542,6 @@ VALUE method_touchpad_loop(VALUE self) {
           case newBtnDefrost: if (!on) { setPower(POWER_DEFROST); }; break;
           case newBtnStart:   start(); break;
           case newBtnStop:    stop(); playSound("stop"); break;
-        }
-
-        // Only play button sound for time and power buttons
-        switch (currentButton) {
-          case newBtn10s:
-          case newBtn10m:
-          case newBtn1s:
-          case newBtn1m:
-          case newBtnHigh:
-          case newBtnMed:
-          case newBtnLow:
-          case newBtnDefrost:
-            playSound("button");
-            break;
         }
 
         lastButton = currentButton;

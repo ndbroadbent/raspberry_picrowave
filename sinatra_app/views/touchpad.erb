@@ -7,9 +7,43 @@
   </head>
 
   <body>
+    <% if @barcodes.any? %>
+      <div class="barcodes">
+        <h3>Unknown Barcodes</h3>
+        <ul>
+          <% @barcodes.each do |barcode| %>
+            <li><%= barcode %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
     <div class="container">
 
       <div class="screen">
+
+        <table class="info" <% if @info.nil? %>style="display: none;"<% end %>>
+          <tr>
+            <th>Status:</th>
+            <td class="on"><%= @info && (@info[:on] ? "On" : "Off") %></td>
+          </tr>
+          <tr>
+            <th>Door:</th>
+            <td class="door"><%= @info && (@info[:door_open] ? "Open" : "Closed") %></td>
+          </tr>
+          <tr>
+            <th>Time:</th>
+            <td class="time"><%= @info && @info[:formatted_time] %></td>
+          </tr>
+          <tr>
+            <th>Power:</th>
+            <td class="power"><%= @info && @info[:power] %></td>
+          </tr>
+        </table>
+
+        <div class="error" <% if @info %>style="display: none;"<% end %>>
+          <strong>ERROR</strong>
+        </div>
       </div>
 
       <div class="buttons">

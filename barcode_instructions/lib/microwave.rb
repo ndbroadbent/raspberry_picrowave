@@ -13,7 +13,7 @@ class Microwave
 
   TWEET_SUFFIXES = [
     "I bet it tastes pretty good!",
-    "I would totally eat it, if only I had a mouth.",
+    "I would totally eat it if I had a mouth.",
     "I'm pretty sure it tastes like chicken. Or maybe tasty wheat.",
     "I hope they like it!",
     "I cooked it with my microwaves.",
@@ -23,12 +23,12 @@ class Microwave
 
   attr_accessor :arduino, :barcode_scanner
 
-  def initialize(preparation_steps)
+  def initialize
     @microwave         = Daemon::Client.new
     @barcode_scanner   = BarcodeScanner.new
     @product_queue     = Queue.new
 
-    @mwcdb_client = MicrowaveCookingDB.new
+    @mwcdb_client = MicrowaveCookingDB.new(email: Config.mwcdb.email, api_key: Config.mwcdb.api_key)
   end
 
   def start_thread!(method)
@@ -38,14 +38,14 @@ class Microwave
           self.send(method)
         rescue Exception => ex
           puts "Error from #{method}!"
-          puts ex.inspect
+          p $!, *$@
           sleep 2
         end
       end
     end
   end
 
-  def fetch_arduino_info
+  def fetch_microwave_info
     begin
       last_info = nil
 
@@ -60,8 +60,8 @@ class Microwave
         sleep 0.5
       end
     rescue Exception => ex
-      # Try re-initializing arduino until connection succeeds
-      @microwave = Arduino.new
+      # Try re-initializing until connection succeeds
+      @microwave = Daemon::Client.new
       raise ex
     end
   end
@@ -72,6 +72,7 @@ class Microwave
       if product
         @product_queue << product
       else
+        save_unknown_upc_for_sinatra(upc)
         play "not_found" # Sorry, I don't know how to cook that!
       end
     end
@@ -80,6 +81,9 @@ class Microwave
   def process_barcodes
     while true
       product = @product_queue.pop
+
+      require 'debugger'
+      debugger
 
       puts "Cooking: #{product['name']}"
 
@@ -200,5 +204,22 @@ class Microwave
     puts "Playing: #{file}"
     path = File.expand_path("../../../audio/#{file}.mp3", __FILE__)
     `mpg123 "#{path}" > /dev/null 2>&1`
+  end
+
+  SINATRA_BARCODES_FILE = File.expand_path("../../../sinatra_app/unknown_barcodes.yml", __FILE__)
+
+  # Save the last 10 unique unknown upc barcodes to display in the Sinatra app
+  def save_unknown_upc_for_sinatra(upc)
+    if File.exists?(unknown_barcodes_file)
+      unknown_barcodes = YAML.load_file(SINATRA_BARCODES_FILE)
+    else
+      unknown_barcodes = []
+    end
+
+    unknown_barcodes << upc
+
+    File.open(unknown_barcodes_file, 'w') do |f|
+      f.puts unknown_barcodes.uniq[0,10].to_yaml
+    end
   end
 end

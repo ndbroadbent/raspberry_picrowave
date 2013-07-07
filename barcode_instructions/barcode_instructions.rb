@@ -10,6 +10,7 @@ require 'thread'
 require 'microwave'
 require 'microwave_cooking_db'
 require 'confstruct'
+require 'twitter'
 
 Config = Confstruct::Configuration.new(YAML.load_file(File.expand_path("../config.yml", __FILE__)))
 
@@ -26,11 +27,11 @@ until connected
     @microwave = Microwave.new
     connected = true
   rescue Exception => ex
-    puts ex.inspect
+    p $!, *$@
     sleep 2
   end
 end
 
-@microwave.start_thread!(:fetch_arduino_info)
+@microwave.start_thread!(:fetch_microwave_info)
 @microwave.start_thread!(:fetch_barcodes)
 @microwave.start_thread!(:process_barcodes).join

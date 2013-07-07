@@ -3,12 +3,20 @@ GEM
   specs:
     barby (0.5.1)
     confstruct (0.2.5)
+    faraday (0.8.7)
+      multipart-post (~> 1.1)
     httparty (0.11.0)
       multi_json (~> 1.0)
       multi_xml (>= 0.5.2)
     libdevinput (0.0.1)
     multi_json (1.7.7)
     multi_xml (0.5.4)
+    multipart-post (1.2.0)
+    simple_oauth (0.2.0)
+    twitter (4.8.1)
+      faraday (~> 0.8, < 0.10)
+      multi_json (~> 1.0)
+      simple_oauth (~> 0.2)
 
 PLATFORMS
   ruby
@@ -19,3 +27,4 @@ DEPENDENCIES
   confstruct
   httparty
   libdevinput
+  twitter
