@@ -12,7 +12,7 @@
 ### END INIT INFO
 
 # Find PID of current process
-PID=$(ps aux | grep '[r]uby \./mw_web_app\.rb' | awk '{print $2}' | head -n1)
+PID=$(ps aux | grep '[r]uby \./microwave_webapp\.rb' | awk '{print $2}' | head -n1)
 
 case "$1" in
   start)
