@@ -123,7 +123,6 @@ char serCommand, serParams;
 
 unsigned long serialTimer, buttonTimer, countdownTimer, doorTimer;
 
-
 VALUE rbMicrowaveExt, rbAudioPlayerModule;
 
 void playSound(const char *methodName) {
@@ -587,5 +586,5 @@ void Init_microwave() {
   rb_define_method(rbMicrowaveExt, "send_command", method_send_command, -2);
   rb_define_method(rbMicrowaveExt, "get_info", method_get_info, 0);
 
-  rbMicrowaveModule = rb_const_get(rb_cObject, rb_intern("AudioPlayer"));
+  rbAudioPlayerModule = rb_const_get(rb_cObject, rb_intern("AudioPlayer"));
 }
