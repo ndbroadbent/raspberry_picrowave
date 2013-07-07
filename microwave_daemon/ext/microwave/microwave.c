@@ -507,7 +507,19 @@ VALUE method_touchpad_loop(VALUE self) {
       currentButton = pressedButton(scanMask, buttonByte);
 
       if (currentButton != -1 && currentButton != lastButton) {
-        playSound("button");
+        // Only play button sound for time and power buttons
+        switch (currentButton) {
+          case newBtn10s:
+          case newBtn10m:
+          case newBtn1s:
+          case newBtn1m:
+          case newBtnHigh:
+          case newBtnMed:
+          case newBtnLow:
+          case newBtnDefrost:
+            playSound("button");
+            break;
+        }
 
         switch (currentButton) {
           case newBtnHigh10s: quickStart(10,  POWER_HIGH); break;
@@ -530,7 +542,7 @@ VALUE method_touchpad_loop(VALUE self) {
           case newBtnLow:     if (!on) { setPower(POWER_LOW); }; break;
           case newBtnDefrost: if (!on) { setPower(POWER_DEFROST); }; break;
           case newBtnStart:   start(); break;
-          case newBtnStop:    stop(); break;
+          case newBtnStop:    playSound("stop"); stop(); break;
         }
 
         lastButton = currentButton;
@@ -581,7 +593,7 @@ void Init_microwave() {
   pinMode(outputClockPin, OUTPUT);
 
   // Setup class
-  rbMicrowaveExt = rb_define_class("rbMicrowaveExt", rb_cObject);
+  rbMicrowaveExt = rb_define_class("MicrowaveExt", rb_cObject);
   rb_define_method(rbMicrowaveExt, "touchpad_loop", method_touchpad_loop, 0);
   rb_define_method(rbMicrowaveExt, "send_command", method_send_command, -2);
   rb_define_method(rbMicrowaveExt, "get_info", method_get_info, 0);

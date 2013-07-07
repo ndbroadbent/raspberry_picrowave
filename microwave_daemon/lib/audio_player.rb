@@ -2,6 +2,7 @@ class AudioPlayer
   class << self
     def button;   play "button"; end
     def start;    play "start"; end
+    def stop;     play "stop"; end
     def finished; play "finished"; end
 
     private

@@ -6,6 +6,7 @@ require 'rubygems'
 require 'socket'
 require 'thread'
 require 'json'
+require File.expand_path('../lib/audio_player', __FILE__)
 require File.expand_path('../microwave', __FILE__)
 
 PORT = 3141
