@@ -31,7 +31,21 @@ body {
 }
 
 .barcodes li {
-  margin-left: 50px;
+  margin-left: 12px;
+}
+
+.barcodes li.divider {
+  list-style: none;
+  border-bottom: 1px solid #557;
+  margin: 15px 0;
+}
+
+.barcodes .btn {
+  margin-left: 7px;
+}
+
+.barcodes hr {
+  border-color: #557;
 }
 
 .barcodes form {

@@ -20,6 +20,8 @@ class Microwave
     end
 
     def listen!
+      puts "Ready for barcodes!"
+
       while true
         barcode = ''
         @barcode_scanner.each do |event|

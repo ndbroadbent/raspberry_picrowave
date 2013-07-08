@@ -31,11 +31,22 @@ $(function(){
       $('.screen .power').html(info.power_string);
     }
 
-    if (barcodes.length){
+    if (barcodes.unknown.length || barcodes.known.length){
       var barcodeHTML = "";
-      $.each(barcodes, function(i, val){
-        barcodeHTML += "<li>" + val + "</li>"
+      $.each(barcodes.unknown, function(i, val){
+        barcodeHTML += "<li>" + val +
+          ': <a href="http://www.microwavecookingdb.com/products/new?upc=' + val + '" target="_blank" class="btn btn-small">Add Product</a>'
+        "</li>";
       });
+
+      if (barcodes.unknown.length && barcodes.known.length) { barcodeHTML += '<li class="divider"></li>' }
+
+      $.each(barcodes.known, function(i, val){
+        barcodeHTML += "<li>" + val +
+          ': <a href="http://www.microwavecookingdb.com/products/' + val + '/edit" target="_blank" class="btn btn-small">Edit Product</a>'
+        "</li>";
+      });
+
       $('.barcodes ul.barcodes-list').html(barcodeHTML);
       $('.barcodes').show();
     } else {

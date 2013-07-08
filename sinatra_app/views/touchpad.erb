@@ -9,13 +9,22 @@
   </head>
 
   <body>
-    <div class="barcodes" <% if @barcodes.empty? %>style="display: none;"<% end %>>
-      <h3>Unknown Barcodes</h3>
+    <div class="barcodes" <% if @barcodes[:unknown].empty? && @barcodes[:known].empty? %>style="display: none;"<% end %>>
+      <h3>Recent Barcodes</h3>
       <ul class="barcodes-list">
-        <% @barcodes.each do |barcode| %>
-          <li><%= barcode %>: <a href="">Add Product</a></li>
+        <% @barcodes[:unknown].each do |barcode| %>
+          <li><%= barcode %>: <a href="http://www.microwavecookingdb.com/products/new?upc=<%= barcode %>" target="_blank" class="btn btn-mini">Add Product</a></li>
+        <% end %>
+        <% if @barcodes[:unknown].any? && @barcodes[:known].any? %>
+          <li class="divider"></li>
+        <% end %>
+
+        <% @barcodes[:known].each do |barcode| %>
+          <li><%= barcode %>: <a href="http://www.microwavecookingdb.com/products/<%= barcode %>/edit" target="_blank" class="btn btn-mini">Edit Product</a></li>
         <% end %>
       </ul>
+
+      <hr/>
 
       <form action="/clear_barcodes" method="post">
         <input class="clear_barcodes btn btn-danger" type="submit" value="Clear barcodes">

@@ -314,13 +314,14 @@ void start() {
     if (currentTime > 0) {
       pushButton(btnStart);
       on = true;
-      paused = false;
       pendingStart = false;
       // Set door timer to 0, so that no further commands are run
       doorTimer = 0;
       // Set countdown timer to decrement time remaining
       countdownTimer = millis();
-      playSound("start");
+      // Only play start sound if microwave wasn't previously paused
+      if (!paused) { playSound("start"); }
+      paused = false;
     }
   } else {
     // Record the fact that start was pushed while the door was open.

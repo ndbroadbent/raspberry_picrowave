@@ -18,7 +18,7 @@ configure do
     end
   end
 
-  set :barcodes_file, File.expand_path("../unknown_barcodes.yml", __FILE__)
+  set :barcodes_file, File.expand_path("../recent_barcodes.yml", __FILE__)
 end
 
 def fetch_info
@@ -52,9 +52,10 @@ def fetch_info
 end
 
 get '/' do
-  @barcodes = []
   if File.exists?(settings.barcodes_file)
     @barcodes = YAML.load_file(settings.barcodes_file)
+  else
+    @barcodes = {known: [], unknown: []}
   end
 
   @info = fetch_info
@@ -88,7 +89,7 @@ info_thread = Thread.new do
       if File.exists?(settings.barcodes_file)
         barcodes = YAML.load_file(settings.barcodes_file)
       else
-        barcodes = []
+        barcodes = {known: [], unknown: []}
       end
       info = fetch_info || {error: true}
 

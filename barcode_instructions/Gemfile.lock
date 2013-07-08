@@ -2,7 +2,14 @@ GEM
   remote: http://rubygems.org/
   specs:
     barby (0.5.1)
+    columnize (0.3.6)
     confstruct (0.2.5)
+    debugger (1.6.0)
+      columnize (>= 0.3.1)
+      debugger-linecache (~> 1.2.0)
+      debugger-ruby_core_source (~> 1.2.1)
+    debugger-linecache (1.2.0)
+    debugger-ruby_core_source (1.2.3)
     faraday (0.8.7)
       multipart-post (~> 1.1)
     httparty (0.11.0)
@@ -25,6 +32,7 @@ DEPENDENCIES
   barby
   bundler (>= 1.2.0)
   confstruct
+  debugger
   httparty
   libdevinput
   twitter

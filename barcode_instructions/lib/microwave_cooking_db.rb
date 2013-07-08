@@ -7,9 +7,14 @@ class MicrowaveCookingDB
   end
 
   def find(upc)
-    product = HTTParty.get("http://www.microwavecookingdb.com/products/#{upc}.json", email: @email, api_key: @api_key)
-
-    return nil if product["error"]
-    product
+    begin
+      puts "Looking up #{upc} on microwavecookingdb.com..."
+      product = HTTParty.get("http://www.microwavecookingdb.com/products/#{upc}.json", query: {email: @email, api_key: @api_key})
+      return nil if product["error"]
+      product
+    rescue Exception => ex
+      p $!, *$@
+      nil
+    end
   end
 end

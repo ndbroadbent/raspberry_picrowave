@@ -53,7 +53,7 @@ class Microwave
         @microwave.fetch_info
 
         if last_info != @microwave.info
-          puts @microwave.info.inspect
+          #puts @microwave.info.inspect
           last_info = @microwave.info
         end
 
@@ -70,9 +70,10 @@ class Microwave
     @barcode_scanner.listen! do |upc|
       product = @mwcdb_client.find(upc)
       if product
+        record_upc(:known, upc)
         @product_queue << product
       else
-        save_unknown_upc_for_sinatra(upc)
+        record_upc(:unknown, upc)
         play "not_found" # Sorry, I don't know how to cook that!
       end
     end
@@ -81,9 +82,6 @@ class Microwave
   def process_barcodes
     while true
       product = @product_queue.pop
-
-      require 'debugger'
-      debugger
 
       puts "Cooking: #{product['name']}"
 
@@ -99,7 +97,6 @@ class Microwave
       end
 
       steps.each do |step|
-
         play step.instruction if step.instruction
 
         if step.wait_for_door_cycle
@@ -182,6 +179,8 @@ class Microwave
         elapsed = 0
       end
     end
+
+    puts "Finished! Enjoy your food :)"
   end
 
   def check_for_interrupt
@@ -206,20 +205,25 @@ class Microwave
     `mpg123 "#{path}" > /dev/null 2>&1`
   end
 
-  UNKNOWN_BARCODES_FILE = File.expand_path("../../../sinatra_app/unknown_barcodes.yml", __FILE__)
+  BARCODES_FILE = File.expand_path("../../../sinatra_app/recent_barcodes.yml", __FILE__)
 
-  # Save the last 10 unique unknown upc barcodes to display in the Sinatra app
-  def save_unknown_upc_for_sinatra(upc)
-    if File.exists?(UNKNOWN_BARCODES_FILE)
-      unknown_barcodes = YAML.load_file(UNKNOWN_BARCODES_FILE)
+  # Save the last 10 unique known and unknown upc barcodes to display in the Sinatra app
+  def record_upc(key, upc)
+    if File.exists?(BARCODES_FILE)
+      barcodes = YAML.load_file(BARCODES_FILE)
     else
-      unknown_barcodes = []
+      barcodes = {known: [], unknown: []}
     end
 
-    unknown_barcodes << upc
+    barcodes[key] << upc
 
-    File.open(UNKNOWN_BARCODES_FILE, 'w') do |f|
-      f.puts unknown_barcodes.uniq[0,10].to_yaml
+    # Only store last 10 uniq barcodes
+    [:known, :unknown].each do |key|
+      barcodes[key] = barcodes[key].uniq[0,10]
+    end
+
+    File.open(BARCODES_FILE, 'w') do |f|
+      f.puts barcodes.to_yaml
     end
   end
 end
