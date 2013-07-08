@@ -6,23 +6,23 @@ class Microwave
       @time = 0
       @power = 'off'
 
-      if step.is_a?(Hash)
+      case step["action"]
+      when "Cook"
         @power = step['power'] if step['power']
         @time  = step['time']  if step['time']
 
-        if step['stand']
-          @time, @power = step['stand'], 'off'
-        end
+      when "Stand"
+        @time  = step['time']  if step['time']
 
-      elsif step == "stir"
-        @instruction = "stir.mp3"  # Please open the microwave door and stir the food.
+      when "Stir"
+        @instruction = "stir"  # Please open the microwave door and stir the food.
         @wait_for_door_cycle = true
       end
     end
 
     def self.steps_for_product(product)
       product['steps'].map do |step_params|
-        CookingStep.new(step_params)
+        new(step_params)
       end
     end
   end
