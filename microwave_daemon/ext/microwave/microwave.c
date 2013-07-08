@@ -506,7 +506,10 @@ static VALUE method_send_command(VALUE self, VALUE args) {
   }
 
   else if (strcmp(cmdStr, "stop") == 0) {
-    if (voiceCommandAllowed()) { stop(); }
+    if (voiceCommandAllowed()) {
+      stop();
+      playSound("stop");
+    }
   }
 
   else if (strcmp(cmdStr, "pause") == 0) {
