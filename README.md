@@ -1,14 +1,14 @@
 # Raspberry Pi-crowave
 
-I added an Arduino and Raspberry Pi to my microwave.
+I put a Raspberry Pi in my microwave.
 
-Now it has:
+Now my microwave has:
 
 * Re-designed UI
-* Clock is automatically set via NTP
+* Better sound effects instead of BEEP BEEP BEEP
+* Clock is automatically updated from the internet
 * Voice control
-* Barcode-scanner to look up food preparation times and automatically cook food
-* Twitter
-
-
-This project is currently in progress... I need this repo so I can clone it onto my Raspberry Pi.
+* Barcode-scanner to look up cooking instructions
+* Online database of cooking instructions at http://www.microwavecookingdb.com
+* Web page so you can control the microwave from your phone, and set up cooking instructions for products 
+* Tweets after finished cooking
