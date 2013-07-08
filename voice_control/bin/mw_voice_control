@@ -1,0 +1,1 @@
+/home/ndbroadbent/sphinx/pocketsphinx-0.8/src/programs/pocketsphinx_continuous -adcdev hw:1,0 -nfft 2048 -samprate 48000 -lm lmtool/4906.lm -dict lmtool/4906.dic
