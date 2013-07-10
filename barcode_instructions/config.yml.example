@@ -1,3 +1,5 @@
+microwave_power:
+
 mwcdb: # Microwave Cooking Database
   api_key:
   email:

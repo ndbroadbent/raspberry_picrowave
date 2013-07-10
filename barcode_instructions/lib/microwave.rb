@@ -28,7 +28,8 @@ class Microwave
     @barcode_scanner   = BarcodeScanner.new
     @product_queue     = Queue.new
 
-    @mwcdb_client = MicrowaveCookingDB.new(email: Config.mwcdb.email, api_key: Config.mwcdb.api_key)
+    @mwcdb_client = MicrowaveCookingDB.new(
+      email: Config.mwcdb.email, api_key: Config.mwcdb.api_key, power: Config.microwave_power)
   end
 
   def start_thread!(method)
