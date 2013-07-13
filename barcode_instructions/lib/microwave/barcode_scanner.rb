@@ -14,8 +14,10 @@ class Microwave
 
     def valid_barcode?(barcode)
       begin
-        Barby::EAN13.new(barcode[0...-1]).to_s == barcode ||
-        Barby::UPCSupplemental.new(barcode[0...-1]).to_s == barcode
+        #Barby::EAN13.new(barcode[0...-1]).to_s == barcode ||
+        #Barby::UPCSupplemental.new(barcode[0...-1]).to_s == barcode
+        # If you want to scan some shoes, you can scan some shoes.
+	true
       rescue
         false
       end
