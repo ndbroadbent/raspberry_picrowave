@@ -1,6 +1,5 @@
 #!/bin/bash
 # Creates /usr/bin/ and /etc/init.d/ symlinks, and runs update-rc.d
-
 for f in $PWD/*/bin/*; do
   ln -fs "$f" "/usr/bin/$(basename $f)"
 done
