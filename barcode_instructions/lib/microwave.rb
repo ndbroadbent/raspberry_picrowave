@@ -92,10 +92,13 @@ class Microwave
       time_remaining = steps.map(&:time).inject(:+)
 
       # If barcode was scanned while door was open, wait for door to close
-      if @microwave.info[:door_open]
-        puts "Waiting for microwave door to close..."
-        sleep(0.5) until !@microwave.info[:door_open]
-      end
+
+      # TODO - fix later
+
+      # if @microwave.info[:door_open]
+      #   puts "Waiting for microwave door to close..."
+      #   sleep(0.5) until !@microwave.info[:door_open]
+      # end
 
       steps.each do |step|
         play step.instruction if step.instruction

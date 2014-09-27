@@ -53,6 +53,30 @@ loop do
           #   {"command":"start"}
 
 
+          if command["time"]
+            time = command["time"]
+
+            # Clear
+            send_command_packet 5, 11
+            sleep 0.2
+
+            # Set cooking mode to microwave
+            send_command_packet 1, 1
+            sleep 0.2
+
+            send_command_packet 2, 0, time
+            sleep 0.2
+
+            if command["power"]
+              send_command_packet 4, command["power"]
+              sleep 0.2
+            end
+
+            return
+          end
+
+
+
           commands = []
           if command.is_a?(String)
             commands << [command, nil]
@@ -65,26 +89,22 @@ loop do
             commands << ["start", nil] if start
           end
 
-          if commands[0] == 'clock'
+          commands.each do |cmd|
+            puts "Sending command to Microwave: #{cmd.inspect}"
 
-            hour, min = commands[1].scan(/\d\d/).map(&:to_i)
 
-            send_command_packet(0, hour, min)
+            if commands[0] == 'clock'
+              hour, min = commands[1].to_s.rjust(4, '0').scan(/\d\d/).map(&:to_i)
+              send_command_packet(cmd, hour, min)
+            end
+
+            if commands[0] == 'clock'
+              hour, min = commands[1].to_s.rjust(4, '0').scan(/\d\d/).map(&:to_i)
+              send_command_packet(cmd, hour, min)
+            end
+
 
           end
-
-          # commands.each do |cmd|
-          #   puts "Sending command to Microwave: #{cmd.inspect}"
-
-          #   # # Tell microwave that this came from a random voice.
-          #   # # (prevents actions when people are just talking in kitchen)
-          #   # cmd << true if request['latent_voice']
-
-
-          #   if
-
-
-          # end
         end
       end
 
