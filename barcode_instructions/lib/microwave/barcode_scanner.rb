@@ -2,6 +2,7 @@ require 'libdevinput'
 DevInput.class_eval { attr_reader :dev }
 EVIOCGRAB = 1074021776
 require 'barby/barcode/ean_13'
+require 'barby/barcode/upc_supplemental'
 
 class Microwave
   class BarcodeScanner
@@ -13,7 +14,8 @@ class Microwave
 
     def valid_barcode?(barcode)
       begin
-        Barby::EAN13.new(barcode[0...-1]).to_s == barcode
+        Barby::EAN13.new(barcode[0...-1]).to_s == barcode ||
+        Barby::UPCSupplemental.new(barcode[0...-1]).to_s == barcode
       rescue
         false
       end
