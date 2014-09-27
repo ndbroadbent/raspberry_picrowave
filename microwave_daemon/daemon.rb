@@ -9,9 +9,22 @@ require 'json'
 require File.expand_path('../lib/audio_player', __FILE__)
 require File.expand_path('../microwave', __FILE__)
 
+require 'serialport'
+
+PORT_STR = "/dev/ttyACM0"
+
 PORT = 3141
 
-@microwave = MicrowaveExt.new
+#@microwave = MicrowaveExt.new
+
+@microwave = SerialPort.new(PORT_STR, 9600, 8, 1, SerialPort::NONE)
+
+
+def send_command_packet(cmd, param1, param2)
+  @microwave.write [0x01, cmd, param1, param2, 0x17].pack('c*')
+
+end
+
 @server    = TCPServer.new(PORT)
 
 Thread.start(@microwave) do |m|
@@ -30,13 +43,15 @@ loop do
 
         if request['get_info']
           # Fetch info and send to TCP client
-          client.puts(@microwave.get_info.to_json)
+          # client.puts(@microwave.get_info.to_json)
+          client.puts({})
 
         elsif command = request['command']
           # Examples:
           #   {"command":{"time":10}}
           #   {"command":{"time":5,"power":7}}
           #   {"command":"start"}
+
 
           commands = []
           if command.is_a?(String)
@@ -50,15 +65,26 @@ loop do
             commands << ["start", nil] if start
           end
 
-          commands.each do |cmd|
-            puts "Sending command to Microwave: #{cmd.inspect}"
+          if commands[0] == 'clock'
 
-            # Tell microwave that this came from a random voice.
-            # (prevents actions when people are just talking in kitchen)
-            cmd << true if request['latent_voice']
+            hour, min = commands[1].scan(/\d\d/).map(&:to_i)
 
-            @microwave.send_command(*cmd)
+            send_command_packet(0, hour, min)
+
           end
+
+          # commands.each do |cmd|
+          #   puts "Sending command to Microwave: #{cmd.inspect}"
+
+          #   # # Tell microwave that this came from a random voice.
+          #   # # (prevents actions when people are just talking in kitchen)
+          #   # cmd << true if request['latent_voice']
+
+
+          #   if
+
+
+          # end
         end
       end
 
