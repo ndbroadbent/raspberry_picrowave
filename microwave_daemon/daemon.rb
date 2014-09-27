@@ -7,24 +7,13 @@ require 'socket'
 require 'thread'
 require 'json'
 require File.expand_path('../lib/audio_player', __FILE__)
-require File.expand_path('../microwave', __FILE__)
-
-require 'serialport'
-
-PORT_STR = "/dev/ttyACM0"
+#require File.expand_path('../microwave', __FILE__)
+require File.expand_path('../lib/serial_microwave', __FILE__)
 
 PORT = 3141
 
 #@microwave = MicrowaveExt.new
-
-@microwave = SerialPort.new(PORT_STR, 9600, 8, 1, SerialPort::NONE)
-
-
-def send_command_packet(cmd, param1, param2)
-  @microwave.write [0x01, cmd, param1, param2, 0x17].pack('c*')
-
-end
-
+@microwave = SerialMicrowave.new
 @server    = TCPServer.new(PORT)
 
 Thread.start(@microwave) do |m|
@@ -52,31 +41,6 @@ loop do
           #   {"command":{"time":5,"power":7}}
           #   {"command":"start"}
 
-
-          if command["time"]
-            time = command["time"]
-
-            # Clear
-            send_command_packet 5, 11
-            sleep 0.2
-
-            # Set cooking mode to microwave
-            send_command_packet 1, 1
-            sleep 0.2
-
-            send_command_packet 2, 0, time
-            sleep 0.2
-
-            if command["power"]
-              send_command_packet 4, command["power"]
-              sleep 0.2
-            end
-
-            next
-          end
-
-
-
           commands = []
           if command.is_a?(String)
             commands << [command, nil]
@@ -89,16 +53,16 @@ loop do
             commands << ["start", nil] if start
           end
 
-          commands.each do |cmd|
-            puts "Sending command to Microwave: #{cmd.inspect}"
-
-
-            if commands[0] == 'clock'
-              hour, min = commands[1].to_s.rjust(4, '0').scan(/\d\d/).map(&:to_i)
-              send_command_packet(cmd, hour, min)
-            end
-
+          reset_time = true
+          if command['power'] && command['time']
+            reset_time = false
           end
+
+          commands.each do |cmd|
+            puts "[MW_DAEMON]: Sending command to Microwave: #{cmd.inspect}"
+            @microwave.send_command(cmd, reset_time)
+          end
+
         end
       end
 
