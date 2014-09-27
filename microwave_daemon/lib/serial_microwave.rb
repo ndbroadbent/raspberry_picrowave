@@ -15,8 +15,33 @@ class SerialMicrowave
     'defrost' => 3
   }
 
+  WEB_BUTTON_MAPPINGS = {
+    "Quickstart Medium 2m"      => [['time', 120], ['power', 'medium']],
+    "Quickstart High 10s"       => [['time', 10], ['power', 'high']],
+    "Quickstart High 20s"       => [['time', 20], ['power', 'high']],
+    "Quickstart High 30s"       => [['time', 30], ['power', 'high']],
+    "Quickstart High 1m"        => [['time', 60], ['power', 'high']],
+    "Quickstart High 2m"        => [['time', 120], ['power', 'high']],
+    "Quickstart Medium 10s"     => [['time', 10], ['power', 'medium']],
+    "Quickstart Medium 20s"     => [['time', 20], ['power', 'medium']],
+    "Quickstart Medium 30s"     => [['time', 30], ['power', 'medium']],
+    "Quickstart Medium 1m"      => [['time', 60], ['power', 'medium']],
+    "Start"                     => [['button', 'start']],
+    "Stop"                      => [['button', 'stop']],
+    "Time 10s"                  => [['time', 120]],
+    "Time 10m"                  => [['time', 120]],
+    "Power Medium"              => [['time', 120]],
+    "Power Defrost"             => [['time', 120]],
+    "Time 1s"                   => [['time', 120]],
+    "Time 1m"                   => [['time', 120]],
+    "Power High"                => [['time', 120]],
+    "Power Low"                 => [['time', 120]]
+  }
+
   def initialize
-    @serial = SerialPort.new(PORT_STR, 9600, 8, 1, SerialPort::NONE)
+    unless ENV['DEBUGGING']
+      @serial = SerialPort.new(PORT_STR, 9600, 8, 1, SerialPort::NONE)
+    end
   end
 
 
@@ -42,6 +67,16 @@ class SerialMicrowave
       send_power level
 
       sleep 0.2
+
+    when 'new_button'
+      puts 'new button!'
+      puts command[1].inspect
+
+      if web_commands = WEB_BUTTON_MAPPINGS[command[1]]
+        web_commands.each do |cmd|
+          send_command cmd, false
+        end
+      end
     end
   end
 
@@ -51,7 +86,10 @@ class SerialMicrowave
   def send_command_packet(cmd, param1, param2 = 0)
     puts "sending cmd: [#{cmd}, #{param1}, #{param2}]"
 
-    @microwave.write [0x01, cmd, param1, param2, 0x17].pack('c*')
+    unless ENV['DEBUGGING']
+      @microwave.write [0x01, cmd, param1, param2, 0x17].pack('c*')
+    end
+
     sleep 0.3
   end
 

@@ -5,7 +5,7 @@ require 'json'
 require File.expand_path('../../microwave_daemon/lib/client', __FILE__)
 
 configure do
-  set server: 'thin', bind: '0.0.0.0', port: '80', connections: []
+  set server: 'thin', bind: '0.0.0.0', port: ENV['PORT'] || '80', connections: []
 
   connected = false
   while !connected
