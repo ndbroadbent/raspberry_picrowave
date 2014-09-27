@@ -30,6 +30,9 @@ loop do
       while data = client.gets
         request = JSON.parse(data)
 
+        puts "received request"
+        puts request.inspect
+
         if request['get_info']
           # Fetch info and send to TCP client
           # client.puts(@microwave.get_info.to_json)
