@@ -53,6 +53,7 @@ class SerialMicrowave
 
     when 'time'
       send_clear
+      set_microwave
       send_time command[1].to_i
       @time = command[1].to_i
 
