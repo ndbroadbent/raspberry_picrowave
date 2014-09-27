@@ -87,7 +87,7 @@ class SerialMicrowave
     puts "sending cmd: [#{cmd}, #{param1}, #{param2}]"
 
     unless ENV['DEBUGGING']
-      @microwave.write [0x01, cmd, param1, param2, 0x17].pack('c*')
+      @serial.write [0x01, cmd, param1, param2, 0x17].pack('c*')
     end
 
     sleep 0.3
