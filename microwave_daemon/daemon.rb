@@ -113,7 +113,7 @@ loop do
 
     rescue Exception => ex
       puts "Error from microwave daemon!"
-      puts ex.inspect
+      p $!, *$@
 
       # Close TCP connection
       client.close
