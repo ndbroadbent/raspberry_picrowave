@@ -72,7 +72,7 @@ loop do
               sleep 0.2
             end
 
-            return
+            next
           end
 
 
@@ -97,12 +97,6 @@ loop do
               hour, min = commands[1].to_s.rjust(4, '0').scan(/\d\d/).map(&:to_i)
               send_command_packet(cmd, hour, min)
             end
-
-            if commands[0] == 'clock'
-              hour, min = commands[1].to_s.rjust(4, '0').scan(/\d\d/).map(&:to_i)
-              send_command_packet(cmd, hour, min)
-            end
-
 
           end
         end
