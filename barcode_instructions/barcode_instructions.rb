@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 $:.unshift File.join(File.dirname(__FILE__), 'lib')
 
-BARCODE_SCANNER_EVENT = "/dev/input/by-id/usb-Metrologic_Metrologic_Scanner-event-kbd"
+BARCODE_SCANNER_EVENT = "/dev/input/by-id/usb-040b_6543-event-kbd"
 ARDUINO_DAEMON_PORT = 3141
 
 require 'rubygems'
