@@ -1,0 +1,27 @@
+#!/bin/sh
+# /etc/init.d/piglow_cpu
+
+### BEGIN INIT INFO
+# Provides:          piglow_cpu
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Simple script to auto start PiGlow CPU
+# Description:       Simple script to auto start PiGlow CPU
+### END INIT INFO
+
+
+ case "$1" in
+  start)
+    sudo python /home/ndbroadbent/PiGlow/Examples/cpu.py &
+    ;;
+  stop)
+    killall python
+    ;;
+  *)
+    exit 1
+    ;;
+
+esac
+exit 0
