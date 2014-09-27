@@ -26,8 +26,8 @@ class SerialMicrowave
     "Quickstart Medium 20s"     => [['time', 20], ['power', 'medium']],
     "Quickstart Medium 30s"     => [['time', 30], ['power', 'medium']],
     "Quickstart Medium 1m"      => [['time', 60], ['power', 'medium']],
-    "Start"                     => [['button', 'start']],
-    "Stop"                      => [['button', 'stop']],
+    "Start"                     => [['button', 10]],
+    "Stop"                      => [['button', 10]],
     "Time 10s"                  => [['time', 120]],
     "Time 10m"                  => [['time', 120]],
     "Power Medium"              => [['time', 120]],
@@ -69,6 +69,9 @@ class SerialMicrowave
 
       sleep 0.2
 
+    when 'button'
+      send_button command[1]
+
     when 'new_button'
       puts 'new button!'
       puts command[1].inspect
@@ -108,5 +111,9 @@ class SerialMicrowave
 
   def set_microwave
     send_command_packet 1, 1
+  end
+
+  def send_button(button)
+    send_command_packet 5, button
   end
 end
