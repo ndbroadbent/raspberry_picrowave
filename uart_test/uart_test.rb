@@ -1,11 +1,16 @@
 #!/bin/ruby
+require 'rubygems'
+require 'serialport'
 
-require 'rubyserial'
+PORT_STR = "/dev/ttyACM0"
 
-serial = Serial.new '/dev/ttyACM0', 57600
+ser = SerialPort.new(PORT_STR, 9600, 8, 1, SerialPort::NONE)
 
+i = 0
 while true do
-  serial.write [0,1,12].pack('c*') + "\n"
+  puts "#{i}) Writing to #{PORT_STR}..."
+  ser.write [0,1,12].pack('c*') + "\n"
 
-  sleep 1
+  sleep 2
+  i += 1
 end
